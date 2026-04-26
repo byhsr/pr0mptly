@@ -14,13 +14,7 @@ interface WorkspaceProps {
 export function Workspace({ openFiles, activeFile, onTabSelect, onTabClose }: WorkspaceProps) {
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
-      <TabBar
-        openFiles={openFiles}
-        activeFile={activeFile}
-        onTabSelect={onTabSelect}
-        onTabClose={onTabClose}
-      />
-      
+
       <div className="flex-1 overflow-hidden bg-background">
         <AnimatePresence mode="wait">
           {activeFile ? (

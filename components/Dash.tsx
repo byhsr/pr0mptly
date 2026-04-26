@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { PanelLeftClose, PanelLeft } from "lucide-react"
+import { TabBar } from "./promptly/tab-bar"
 import { Sidebar } from "@/components/promptly/sidebar"
 import { Workspace } from "@/components/promptly/workspace"
 
@@ -52,6 +53,17 @@ export default function Promptly() {
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
+        <div>
+         
+               <TabBar
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                    openFiles={openFiles}
+                    activeFile={activeFile}
+                    onTabSelect={setActiveFile}
+                    onTabClose={handleTabClose}
+                  />
+        </div>
         {/* Workspace */}
         <Workspace
           openFiles={openFiles}
@@ -62,4 +74,8 @@ export default function Promptly() {
       </div>
     </div>
   )
+}
+
+export const ToggleSideBarButton = () => {
+   
 }

@@ -1,11 +1,12 @@
 "use client"
-
-import { X } from "lucide-react"
+import { PanelLeftClose, PanelLeft,X  } from "lucide-react"
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 interface TabBarProps {
   openFiles: string[]
   activeFile: string | null
+  sidebarOpen: boolean
+  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>
   onTabSelect: (filename: string) => void
   onTabClose: (filename: string) => void
 }
@@ -58,10 +59,10 @@ const appWindow = getCurrentWindow();
 //   onTabClose: (file: string) => void;
 // };
 
-export function TabBar({ openFiles, activeFile, onTabSelect, onTabClose }: TabBarProps) {
+export function TabBar({ openFiles, activeFile, onTabSelect, onTabClose, sidebarOpen, setSidebarOpen }: TabBarProps) {
   return (
     <div
-      className="flex items-center border-b border-border bg-surface"
+      className="flex items-center border border-b border-border bg-surface"
       style={{ minHeight: 40 }}
     >
       {/* Logo — drag region starts here */}
@@ -70,6 +71,17 @@ export function TabBar({ openFiles, activeFile, onTabSelect, onTabClose }: TabBa
         className="flex items-center px-4 shrink-0 h-full select-none"
         style={{ minWidth: 120 }}
       >
+        <span>
+              <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="rounded-lg p-2 text-muted hover:text-foreground hover:bg-background transition-colors">
+            {sidebarOpen ? (
+              <PanelLeftClose className="h-4 w-4" />
+            ) : (
+              <PanelLeft className="h-4 w-4" />
+            )}
+          </button>
+        </span>
         <span
           style={{
             fontFamily: "'Syne', sans-serif",

@@ -27,7 +27,7 @@ export function ScratchpadPanel() {
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="Brain dump here. Messy is fine."
-        className="flex-1 w-full rounded-lg border border-border bg-background p-4 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent resize-none font-mono leading-relaxed"
+        className="flex-1 w-full rounded-lg  bg-background p-4 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent resize-none font-mono leading-relaxed"
       />
     </div>
   )

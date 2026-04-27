@@ -1,0 +1,10 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Isometric House Shape -->
+  <path d="M100 20 L180 70 L180 160 L100 110 L20 160 L20 70 Z" fill="none" stroke="black" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Roof line -->
+  <path d="M100 20 L20 70 M100 20 L180 70" fill="none" stroke="black" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Left Wall Side -->
+  <path d="M20 70 L20 160 L100 110" fill="none" stroke="black" stroke-width="4" stroke-linejoin="round"/>
+  <!-- Right Wall Side -->
+  <path d="M180 70 L180 160 L100 110" fill="none" stroke="black" stroke-width="4" stroke-linejoin="round"/>
+</svg>

@@ -1,6 +1,7 @@
 "use client"
-import { PanelLeftClose, PanelLeft,X  } from "lucide-react"
+import { PanelLeftClose, PanelLeft,X, HouseIcon} from "lucide-react"
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import House3D from "@/src/assets/3DHouse.svg?react";
 
 interface TabBarProps {
   openFiles: string[]
@@ -11,53 +12,7 @@ interface TabBarProps {
   onTabClose: (filename: string) => void
 }
 
-// export function TabBar({ openFiles, activeFile, onTabSelect, onTabClose }: TabBarProps) {
-//   return (
-//     <div className="flex items-center gap-1 border-b border-border bg-surface px-2 py-1.5 overflow-x-auto">
-//       {openFiles.map((file) => {
-//         const isActive = activeFile === file
-//         return (
-//           <div
-//             key={file}
-//             className={`group flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors cursor-pointer ${
-//               isActive
-//                 ? "bg-background text-foreground"
-//                 : "text-muted hover:bg-background/50 hover:text-foreground"
-//             }`}
-//             onClick={() => onTabSelect(file)}
-//           >
-//             <span>{file}</span>
-//             <button
-//               onClick={(e) => {
-//                 e.stopPropagation()
-//                 onTabClose(file)
-//               }}
-//               className={`rounded p-0.5 transition-colors ${
-//                 isActive
-//                   ? "text-muted hover:text-foreground hover:bg-surface"
-//                   : "opacity-0 group-hover:opacity-100 text-muted hover:text-foreground"
-//               }`}
-//             >
-//               <X className="h-3.5 w-3.5" />
-//             </button>
-//           </div>
-//         )
-//       })}
-//     </div>
-//   )
-// }
-
-
-
-
 const appWindow = getCurrentWindow();
-
-// type TabBarProps = {
-//   openFiles: string[];
-//   activeFile: string;
-//   onTabSelect: (file: string) => void;
-//   onTabClose: (file: string) => void;
-// };
 
 export function TabBar({ openFiles, activeFile, onTabSelect, onTabClose, sidebarOpen, setSidebarOpen }: TabBarProps) {
   return (
@@ -94,7 +49,9 @@ export function TabBar({ openFiles, activeFile, onTabSelect, onTabClose, sidebar
           pr0mptly
         </span>
       </div>
-
+      <div>
+        <HouseIcon className="text-muted w-4 h-4"  />
+      </div>
       {/* Tabs */}
       <div className="flex items-center gap-1 px-2 py-1.5 overflow-x-auto flex-1">
         {openFiles.map((file) => {

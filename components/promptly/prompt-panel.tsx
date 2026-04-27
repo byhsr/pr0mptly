@@ -88,7 +88,7 @@ export function PromptPanel() {
               onClick={() => setFormat(f)}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 format === f
-                  ? "bg-accent text-accent-foreground"
+                  ? "bg-border text-foreground"
                   : "text-muted hover:text-foreground"
               }`}
             >
@@ -98,9 +98,9 @@ export function PromptPanel() {
         </div>
       </div>
 
-      {/* Code Block */}
+      {/* Prompt Block */}
       <div className="relative flex-1 overflow-hidden p-4">
-        <pre className="h-full overflow-y-auto rounded-lg border border-border bg-background p-4 text-sm text-foreground font-mono leading-relaxed">
+        <pre className="h-full overflow-y-auto rounded-lg bg-background p-4 text-sm text-foreground font-mono leading-relaxed">
           {mockPrompts[format]}
         </pre>
 

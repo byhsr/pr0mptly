@@ -99,7 +99,7 @@ function TreeNode({ node, depth, activeFile, onFileSelect }: TreeNodeProps) {
       onClick={() => onFileSelect(node.name)}
       className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors ${
         isActive
-          ? "bg-accent text-accent-foreground"
+          ? "bg-border text-foreground"
           : "text-foreground/80 hover:bg-surface"
       }`}
       style={{ paddingLeft: `${depth * 12 + 28}px` }}
@@ -123,11 +123,9 @@ export function Sidebar({ isOpen, activeFile, onFileSelect }: SidebarProps) {
         <div className="flex items-center gap-2 p-3 border-b border-border">
           <button className="flex items-center gap-1.5 rounded-lg bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-border transition-colors">
             <Plus className="h-3.5 w-3.5" />
-            File
           </button>
           <button className="flex items-center gap-1.5 rounded-lg bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-border transition-colors">
             <FolderPlus className="h-3.5 w-3.5" />
-            Folder
           </button>
         </div>
 

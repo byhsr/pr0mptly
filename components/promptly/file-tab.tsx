@@ -6,6 +6,7 @@ import { Columns2, Columns3 } from "lucide-react"
 import { BuilderPanel } from "./builder-panel"
 import { ScratchpadPanel } from "./scratchpad-panel"
 import { PromptPanel } from "./prompt-panel"
+import { Tab } from "./Tabbar"
 
 type SubTab = "builder" | "scratchpad" | "prompt"
 type SplitMode = "none" | "two" | "two-prompt" | "three"
@@ -14,7 +15,7 @@ interface FileTabProps {
   filename: string
 }
 
-export function FileTab({ filename }: FileTabProps) {
+export function FileTab({ tab }: { tab: Tab }) {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("builder")
   const [splitMode, setSplitMode] = useState<SplitMode>("none")
 
@@ -64,7 +65,7 @@ export function FileTab({ filename }: FileTabProps) {
   const panelsToShow = getPanelsToShow()
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full w-full flex-col">
       {/* Sub-tab Header */}
       <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-2">
         {/* Tab Switcher */}

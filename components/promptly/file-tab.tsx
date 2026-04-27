@@ -34,7 +34,7 @@ export function FileTab({ tab }: { tab: Tab }) {
       case "two-prompt":
         return <Columns3 className="h-4 w-4" />
       case "three":
-        return <Columns2 className="h-4 w-4 text-accent" />
+        return <Columns2 className="h-4 w-4 " />
     }
   }
 
@@ -66,42 +66,68 @@ export function FileTab({ tab }: { tab: Tab }) {
 
   return (
     <div className="flex h-full w-full flex-col">
-      {/* Sub-tab Header */}
-      <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-2">
-        {/* Tab Switcher */}
-        <div className="flex items-center gap-1">
-          {(["builder", "scratchpad", "prompt"] as SubTab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveSubTab(tab)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium capitalize transition-colors ${
-                activeSubTab === tab
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted hover:text-foreground hover:bg-background"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+      <div className="flex justify-between w-f bg-surface">
+        {/* tab Title */}
+        <div
+        className="w-fit"
+          style={{
+            padding: "12px 20px",
+            fontFamily: "'Syne', sans-serif",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "#c8f135",
+              display: "inline-block",
+            }}
+          />
+          {tab.label}
         </div>
 
-        {/* Split Button */}
-        <button
-          onClick={cycleSplitMode}
-          className={`rounded-lg p-2 transition-colors ${
-            splitMode !== "none"
+
+
+        <div className="flex items-center justify-between border-b border-border  px-4 py-2">
+          {/* Tab Switcher */}
+          <div className="flex items-center gap-1">
+            {(["builder", "scratchpad", "prompt"] as SubTab[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveSubTab(tab)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium capitalize transition-colors ${activeSubTab === tab
+                  ? "bg-background text-foreground"
+                  : "text-main hover:text-foreground hover:bg-background"
+                  }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Split Button */}
+          <button
+            onClick={cycleSplitMode}
+            className={`rounded-lg p-2 transition-colors ${splitMode !== "none"
               ? "bg-accent text-accent-foreground"
               : "text-muted hover:text-foreground hover:bg-background"
-          }`}
-          title="Toggle split view"
-        >
-          {getSplitIcon()}
-        </button>
+              }`}
+            title="Toggle split view"
+          >
+            {getSplitIcon()}
+          </button>
+        </div>
       </div>
-
       {/* Panel Content */}
       <div className="flex-1 overflow-hidden">
-        <motion.div 
+        <motion.div
           className="flex h-full"
           layout
         >
@@ -111,15 +137,14 @@ export function FileTab({ tab }: { tab: Tab }) {
                 key={panel}
                 layout
                 initial={{ opacity: 0, width: 0 }}
-                animate={{ 
-                  opacity: 1, 
-                  width: `${100 / panelsToShow.length}%` 
+                animate={{
+                  opacity: 1,
+                  width: `${100 / panelsToShow.length}%`
                 }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
-                className={`h-full overflow-hidden ${
-                  index > 0 ? "border-l border-border" : ""
-                }`}
+                className={`h-full overflow-hidden ${index > 0 ? "border-l border-border" : ""
+                  }`}
               >
                 <div className="h-full overflow-y-auto">
                   {renderPanel(panel)}

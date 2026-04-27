@@ -113,8 +113,9 @@ export function TabBar({
         }}
       >
         {tabs.map((tab) => {
-          const isActive = activeTabId === tab.id;
-          const isHome = tab.type === "home";
+        if (tab.type === "home") return null;
+        const isActive = activeTabId === tab.id;
+       
 
           return (
             <div

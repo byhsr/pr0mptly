@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Home, FileText, Layout, BookOpen, Plus } from "lucide-react"
 import { Tab } from "./Tabbar"
@@ -110,10 +110,6 @@ function SectionItem({
   )
 }
 
-// ── Main Sidebar ──────────────────────────────────────────────────────────────
-export function Sidebar({ isOpen, activeTab, onOpenTab }: SidebarProps) {
-  const [manualSection, setManualSection] = useState<SectionId | null>("prompts")
-
   const sectionFromTab: Record<Tab["type"], SectionId | null> = {
     home: null,
     prompt: "prompts",
@@ -121,13 +117,24 @@ export function Sidebar({ isOpen, activeTab, onOpenTab }: SidebarProps) {
     library: "library",
   }
 
-  const activeSection = sectionFromTab[activeTab.type] ?? manualSection
+// ── Main Sidebar ──────────────────────────────────────────────────────────────
+export function Sidebar({ isOpen, activeTab, onOpenTab }: SidebarProps) {
+const [manualSection, setManualSection] = useState<SectionId | null>("prompts")
+const [manualOverride, setManualOverride] = useState(false)
 
-  function toggleSection(section: SectionId) {
-    setManualSection((prev) => (prev === section ? null : section))
-  }
+const derivedSection = sectionFromTab[activeTab?.type] ?? null
 
+const activeSection = manualOverride ? manualSection : (derivedSection ?? manualSection)
+
+function toggleSection(section: SectionId) {
+  setManualSection((prev) => (prev === section ? null : section))
+  setManualOverride(true) // user clicked rail, take control
+}
   const panelOpen = isOpen && activeSection !== null
+
+  useEffect(() => {
+  setManualOverride(false) // tab changed, let it drive again
+}, [activeTab?.id])
 
   return (
     <div className="flex h-full flex-shrink-0" style={{ borderRight: "0.5px solid var(--color-border, #222)" }}>

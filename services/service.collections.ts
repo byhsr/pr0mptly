@@ -1,25 +1,51 @@
 import { getDB } from "../lib/db"
 
-type CollectionRow = {
+export type CollectionRow = {
   id: string
   name: string
   parent_id: string | null
 }
 
-type PromptRow = {
+export type PromptRow = {
   id: string
   name: string
   collection_id: string | null
 }
 
-type CollectionNode = {
+export type CollectionNode = {
   id: string
   name: string
   children: CollectionNode[]
   prompts: PromptRow[]
 }
 
-export async function getCollectionsTree(): Promise<CollectionNode[]> {
+export type CollectionTree = {
+  tree: CollectionNode[]
+  rootPrompts: PromptRow[]
+}
+
+export async function createCollection(
+  name: string,
+  parent_id: string | null = null
+): Promise<{ id: string }> {
+  const db = await getDB()
+  const id = crypto.randomUUID()
+  const now = new Date().toISOString()
+
+  if (!name.trim()) {
+    throw new Error("Collection name required")
+  }
+
+  await db.execute(
+    `INSERT INTO collections (id, name, parent_id, created_at)
+     VALUES (?, ?, ?, ?)`,
+    [id, name, parent_id, now]
+  )
+
+  return { id }
+}
+
+export async function getCollectionsTree(): Promise<CollectionTree> {
   const db = await getDB()
 
   // ---- fetch all ----
@@ -83,5 +109,8 @@ export async function getCollectionsTree(): Promise<CollectionNode[]> {
     })
   }
 
-  return tree
+ return {
+  tree: build(null),
+  rootPrompts: promptMap.get(null) || []
+}
 }

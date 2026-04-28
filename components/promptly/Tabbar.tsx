@@ -20,7 +20,9 @@ interface TabBarProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
-const appWindow = getCurrentWindow();
+
+
+const appWindow =  getCurrentWindow() 
 // Tiny dot to indicate tab type — keeps it minimal, no text overload
 function TabTypeDot({ type }: { type: TabType }) {
   const colors: Record<TabType, string> = {

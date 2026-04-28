@@ -135,7 +135,9 @@ async function runMigrations(db: Database) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 export async function initDB() {
   if (db) return db;
-  db = await Database.load("sqlite:app.db");
+  console.log("before load")
+  db = await Database.load("sqlite:app.db?mode=rwc");
+  console.log("after load")
   await runMigrations(db);
   return db;
 }
@@ -150,7 +152,7 @@ export async function runTransaction<T>(
   fn: (db: any) => Promise<T>
 ): Promise<T> {
   await db.execute("BEGIN")
-
+  
   try {
     const result = await fn(db)
     await db.execute("COMMIT")

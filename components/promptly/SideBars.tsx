@@ -1,28 +1,20 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Home, FileText, Layout, BookOpen, Plus } from "lucide-react"
+import { Home, FileText, Layout, BookOpen, Plus, FolderPlus , FilePlus } from "lucide-react"
 import { Tab } from "./Tabbar"
 
-// ── Mock data (replace with real data later) ──────────────────────────────────
-const mockPrompts = [
-  { id: "p-1", name: "Cold email" },
-  { id: "p-2", name: "Code review" },
-  { id: "p-3", name: "Meeting summary" },
-]
-
-const mockTemplates = [
-  { id: "t-1", name: "Blog post" },
-  { id: "t-2", name: "Product brief" },
-  { id: "t-3", name: "Weekly report" },
-]
-
-const mockLibrary = [
-  { id: "l-1", name: "GPT-4 system prompts" },
-  { id: "l-2", name: "Claude starters" },
-]
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type SectionId = "prompts" | "templates" | "library"
+
+
+
+// const sectionFromTab: Record<string, SectionId | null> = {
+//   home: null,
+//   prompt: "prompts",
+//   template: "templates",
+//   library: "library",
+// };
 
 interface SidebarProps {
   isOpen: boolean
@@ -118,6 +110,262 @@ function SectionItem({
   }
 
 // ── Main Sidebar ──────────────────────────────────────────────────────────────
+
+
+// import type { CollectionTree, CollectionNode, PromptRow } from '@/services/service.collections'; 
+
+
+interface SidebarProps {
+  isOpen: boolean;
+  activeTab: Tab;
+  onOpenTab: (tab: Tab) => void;
+
+  // New props from Promptly
+  collectionsTree: CollectionTree | null;
+  selectedId: string | null;
+  setSelectedId: (id: string | null) => void;
+  expandedCollections: Set<string>;
+  setExpandedCollections: React.Dispatch<React.SetStateAction<Set<string>>>;
+  onCreatePrompt: (collectionId: string | null) => Promise<void>;
+  onCreateCollection: (parentId: string | null) => Promise<void>;
+  onRefreshTree?: () => Promise<void>;
+}
+
+
+
+interface SidebarProps {
+  isOpen: boolean;
+  activeTab: Tab;
+  onOpenTab: (tab: Tab) => void;
+
+  // Tree & State from Promptly
+  collectionsTree: CollectionTree | null;
+  selectedId: string | null;
+  setSelectedId: (id: string | null) => void;
+  expandedCollections: Set<string>;
+  setExpandedCollections: React.Dispatch<React.SetStateAction<Set<string>>>;
+  onCreatePrompt: (collectionId: string | null) => Promise<void>;
+  onCreateCollection: (parentId: string | null) => Promise<void>;
+}
+
+export function Sidebar({
+  isOpen,
+  activeTab,
+  onOpenTab,
+  collectionsTree,
+  selectedId,
+  setSelectedId,
+  expandedCollections,
+  setExpandedCollections,
+  onCreatePrompt,
+  onCreateCollection,
+}: SidebarProps) {
+  
+  const [manualSection, setManualSection] = useState<SectionId | null>("prompts");
+  const [manualOverride, setManualOverride] = useState(false);
+  const [creatingItem, setCreatingItem] = useState<{ type: 'prompt' | 'collection'; parentId: string | null } | null>(null);
+  const [newItemName, setNewItemName] = useState('');
+
+  const derivedSection = sectionFromTab[activeTab?.type] ?? null;
+  const activeSection = manualOverride ? manualSection : (derivedSection ?? manualSection);
+
+  const panelOpen = isOpen && activeSection !== null;
+
+  useEffect(() => {
+    setManualOverride(false);
+  }, [activeTab?.id]);
+
+  const toggleSection = (section: SectionId) => {
+    setManualSection((prev) => (prev === section ? null : section));
+    setManualOverride(true);
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedCollections((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  // VS Code-style creation logic
+  const handleNewPrompt = () => {
+    let parentId: string | null = null;
+
+    if (selectedId && collectionsTree) {
+      // Check if selectedId is a prompt
+      const isPromptSelected = 
+        collectionsTree.rootPrompts.some(p => p.id === selectedId) ||
+        collectionsTree.tree.some(c => hasPrompt(c, selectedId));
+
+      if (isPromptSelected) {
+        parentId = findParentCollectionId(selectedId, collectionsTree);
+      } else {
+        // Selected item is a collection → create inside it
+        parentId = selectedId;
+      }
+    }
+
+    setCreatingItem({ type: 'prompt', parentId });
+    setNewItemName('Untitled Prompt');
+  };
+
+  const handleNewCollection = () => {
+    let parentId: string | null = null;
+    if (selectedId && collectionsTree) {
+      const isCollectionSelected = collectionsTree.tree.some(c => 
+        c.id === selectedId || hasCollection(c, selectedId)
+      );
+      if (isCollectionSelected) parentId = selectedId;
+    }
+
+    setCreatingItem({ type: 'collection', parentId });
+    setNewItemName('New Collection');
+  };
+
+  const confirmCreation = async () => {
+    if (!creatingItem || !newItemName.trim()) return;
+
+    try {
+      if (creatingItem.type === 'prompt') {
+        await onCreatePrompt(creatingItem.parentId);
+      } else {
+        await onCreateCollection(creatingItem.parentId);
+      }
+    } catch (err) {
+      console.error('Creation failed:', err);
+    } finally {
+      setCreatingItem(null);
+      setNewItemName('');
+    }
+  };
+
+  const cancelCreation = () => {
+    setCreatingItem(null);
+    setNewItemName('');
+  };
+
+  return (
+    <div className="flex h-full flex-shrink-0" style={{ borderRight: "0.5px solid var(--color-border, #222)" }}>
+      
+      {/* Icon Rail */}
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 52, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col items-center py-2 gap-1 overflow-hidden flex-shrink-0"
+            style={{ background: "var(--color-surface, #0d0d0d)", borderRight: "0.5px solid var(--color-border, #222)" }}
+          >
+            <RailButton
+              icon={Home}
+              label="Home"
+              isActive={activeTab.type === "home"}
+              onClick={() => onOpenTab({ id: "home", label: "Home", type: "home" })}
+            />
+
+            <div style={{ width: 24, height: 0.5, background: "var(--color-border, #222)", margin: "4px 0" }} />
+
+            <RailButton icon={FileText} label="Prompts" isActive={activeSection === "prompts"} onClick={() => toggleSection("prompts")} />
+            <RailButton icon={Layout} label="Templates" isActive={activeSection === "templates"} onClick={() => toggleSection("templates")} />
+            <RailButton icon={BookOpen} label="Library" isActive={activeSection === "library"} onClick={() => toggleSection("library")} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Section Panel */}
+      <AnimatePresence initial={false}>
+        {panelOpen && (
+          <motion.div
+            key={activeSection}
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 180, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col h-full overflow-hidden flex-shrink-0"
+            style={{ background: "var(--color-surface, #0d0d0d)" }}
+          >
+            <div className="flex flex-col h-full w-[180px]">
+              {/* Header */}
+              <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--color-border,#222)]">
+                <span className="uppercase text-[10px] tracking-[0.08em] font-bold text-muted">
+                  {activeSection}
+                </span>
+
+                {activeSection === "prompts" && (
+                  <div className="flex gap-1">
+                    <button onClick={handleNewCollection} className="p-1 hover:bg-zinc-800 rounded transition-colors" title="New Collection">
+                      <FolderPlus size={14} />
+                    </button>
+                    <button onClick={handleNewPrompt} className="p-1 hover:bg-zinc-800 rounded transition-colors" title="New Prompt">
+                      <FilePlus size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5">
+                {activeSection === "prompts" && collectionsTree && (
+                  <>
+                    {/* Root-level Prompts */}
+                    {collectionsTree.rootPrompts.map((prompt) => (
+                      <SectionItem
+                        key={prompt.id}
+                        id={prompt.id}
+                        name={prompt.name}
+                        type="prompt"
+                        isActive={selectedId === prompt.id || activeTab.id === prompt.id}
+                        onOpenTab={onOpenTab}
+                        onClick={() => setSelectedId(prompt.id)}
+                      />
+                    ))}
+
+                    {/* Nested Collections */}
+                    {collectionsTree.tree.map((collection) => (
+                      <CollectionTreeNode
+                        key={collection.id}
+                        node={collection}
+                        expandedCollections={expandedCollections}
+                        toggleExpand={toggleExpand}
+                        selectedId={selectedId}
+                        setSelectedId={setSelectedId}
+                        onOpenTab={onOpenTab}
+                        creatingItem={creatingItem}
+                        newItemName={newItemName}
+                        setNewItemName={setNewItemName}
+                        confirmCreation={confirmCreation}
+                        cancelCreation={cancelCreation}
+                      />
+                    ))}
+
+                    {/* Inline creation at root level */}
+                    {creatingItem && creatingItem.parentId === null && (
+                      <InlineCreationInput
+                        name={newItemName}
+                        setName={setNewItemName}
+                        type={creatingItem.type}
+                        onConfirm={confirmCreation}
+                        onCancel={cancelCreation}
+                      />
+                    )}
+                  </>
+                )}
+
+                {/* TODO: Replace with real data later */}
+                {activeSection === "templates" && <div className="text-muted text-sm p-2">Templates coming soon...</div>}
+                {activeSection === "library" && <div className="text-muted text-sm p-2">Library coming soon...</div>}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function Sidebar({ isOpen, activeTab, onOpenTab }: SidebarProps) {
 const [manualSection, setManualSection] = useState<SectionId | null>("prompts")
 const [manualOverride, setManualOverride] = useState(false)

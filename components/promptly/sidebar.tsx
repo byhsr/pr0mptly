@@ -99,8 +99,24 @@ interface PromptItemProps {
 }
 
 function PromptItem({ prompt, depth = 0, isActive, isSelected, onSelect, onOpenTab }: PromptItemProps) {
+  const [contextMenu, setContextMenu] = useState<{
+    x: number
+    y: number
+    prompt: any
+  } | null>(null)
+
+
   return (
     <div
+      onContextMenu={(e) => {
+        e.preventDefault()
+        onSelect()
+        setContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          prompt
+        })
+      }}
       onClick={() => {
         onSelect()
         onOpenTab({ id: prompt.id, label: prompt.name, type: "prompt" })
@@ -118,12 +134,43 @@ function PromptItem({ prompt, depth = 0, isActive, isSelected, onSelect, onOpenT
         background: isSelected
           ? "var(--color-selection, #1e1e1e)"
           : isActive
-          ? "var(--color-active, #1a1a1a)"
-          : "transparent",
+            ? "var(--color-active, #1a1a1a)"
+            : "transparent",
         borderRadius: 4,
         transition: "background 0.1s",
       }}
     >
+      {contextMenu && (
+        <div
+          style={{
+            position: "fixed",
+            top: contextMenu.y,
+            left: contextMenu.x
+          }}
+          className="bg-zinc-900 border rounded p-1"
+          onMouseLeave={() => setContextMenu(null)}
+        >
+          <div
+            className="px-2 py-1 hover:bg-zinc-800 cursor-pointer"
+            onClick={() => {
+              // handleRename(contextMenu.prompt)
+              setContextMenu(null)
+            }}
+          >
+            Rename
+          </div>
+
+          <div
+            className="px-2 py-1 hover:bg-red-800 cursor-pointer text-red-400"
+            onClick={() => {
+              // handleDelete(contextMenu.prompt.id)
+              setContextMenu(null)
+            }}
+          >
+            Delete
+          </div>
+        </div>
+      )}
       <File size={11} style={{ flexShrink: 0, opacity: 0.6 }} />
       <span
         style={{
@@ -343,10 +390,10 @@ export function Sidebar({
   }
 
   function toggleExpand(id: string) {
-  const next = new Set(expandedCollections)
-  next.has(id) ? next.delete(id) : next.add(id)
-  setExpandedCollections(next)
-}
+    const next = new Set(expandedCollections)
+    next.has(id) ? next.delete(id) : next.add(id)
+    setExpandedCollections(next)
+  }
 
   // Given the currently selectedId, figure out which collection to create inside
   function resolveParentCollectionId(): string | null {
@@ -392,8 +439,8 @@ export function Sidebar({
 
     // If creating inside a collection, expand it
     if (parentCollectionId) {
-  setExpandedCollections(new Set([...expandedCollections, parentCollectionId]))
-}
+      setExpandedCollections(new Set([...expandedCollections, parentCollectionId]))
+    }
 
     setPendingCreate({ type, parentCollectionId })
   }
@@ -401,12 +448,12 @@ export function Sidebar({
   async function confirmCreate(name: string) {
 
     if (creatingRef.current) return
-     creatingRef.current = true
+    creatingRef.current = true
     try {
-    if (!pendingCreate) return
-    const { type, parentCollectionId } = pendingCreate
-    setPendingCreate(null)
-    
+      if (!pendingCreate) return
+      const { type, parentCollectionId } = pendingCreate
+      setPendingCreate(null)
+
       if (type === "prompt") {
         await onCreatePrompt(name, parentCollectionId)
       } else {
@@ -417,7 +464,7 @@ export function Sidebar({
       log.info("tree refreshed")
     } catch (err) {
       log.info("creation failed", err)
-    } finally{
+    } finally {
       creatingRef.current = false
     }
   }

@@ -69,33 +69,13 @@ export function FileTab({ tab }: { tab: Tab }) {
       <div className="flex justify-between w-f bg-surface">
         {/* tab Title */}
         <div
-        className="w-fit"
-          style={{
-            padding: "12px 20px",
-            fontFamily: "'Syne', sans-serif",
-            fontSize: 13,
-            fontWeight: 600,
-            color: "",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
+        className="w-fit flex-1 flex items-center px-6 "
+     
         >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "#c8f135",
-              display: "inline-block",
-            }}
-          />
           {tab.label}
         </div>
 
-
-
-        <div className="flex items-center justify-between border-b border-border  px-4 py-2">
+        <div className="flex flex-2 items-center justify-end gap-4 border-b border-border  px-4 py-2">
           {/* Tab Switcher */}
           <div className="flex items-center gap-1">
             {(["builder", "scratchpad", "prompt"] as SubTab[]).map((tab) => (

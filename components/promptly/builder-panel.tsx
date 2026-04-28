@@ -92,7 +92,7 @@ export function BuilderPanel() {
               onChange={(e) =>
                 setFieldValues({ ...fieldValues, [field.id]: e.target.value })
               }
-              className="w-full rounded-lg border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-accent resize-none font-mono"
+              className="w-full rounded-lg outline-0 border border-border bg-background p-3 text-sm text-foreground placeholder:text-muted/60 resize-none font-mono"
               rows={4}
               placeholder={`Enter ${field.label.toLowerCase()}...`}
             />

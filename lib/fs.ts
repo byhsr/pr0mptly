@@ -1,24 +1,61 @@
-// lib/fs.ts
-import { writeTextFile, readTextFile, mkdir, readDir, BaseDirectory } from "@tauri-apps/plugin-fs";
+import {
+  mkdir,
+  writeTextFile,
+  readTextFile,
+  readDir,
+  remove,
+  exists,
+  BaseDirectory
+} from "@tauri-apps/plugin-fs"
 
-const BASE = BaseDirectory.AppData;
+import { join } from "@tauri-apps/api/path"
 
-// Create a folder
+const BASE = BaseDirectory.AppData
+
+// Create folder
 export async function createFolder(folderName: string) {
-  await mkdir(folderName, { baseDir: BASE, recursive: true });
+  await mkdir(folderName, {
+    baseDir: BASE,
+    recursive: true
+  })
 }
 
-// Create a file inside a folder
+// Create file
 export async function createFile(folderName: string, fileName: string, content = "") {
-  await writeTextFile(`${folderName}/${fileName}`, content, { baseDir: BASE });
+  const path = await join(folderName, fileName)
+
+  await writeTextFile(path, content, {
+    baseDir: BASE
+  })
 }
 
-// Read a file
+// Read file
 export async function readFile(folderName: string, fileName: string) {
-  return await readTextFile(`${folderName}/${fileName}`, { baseDir: BASE });
+  const path = await join(folderName, fileName)
+
+  return await readTextFile(path, {
+    baseDir: BASE
+  })
 }
 
-// List all folders + files
+// Delete folder
+export async function deleteFolder(folderName: string) {
+  await remove(folderName, {
+    baseDir: BASE,
+    recursive: true
+  })
+}
+
+// Check exists
+export async function folderExists(folderName: string) {
+  return await exists(folderName, {
+    baseDir: BASE
+  })
+}
+
+// List everything
 export async function listAll() {
-  return await readDir(".", { baseDir: BASE});
+  return await readDir(".", {
+    baseDir: BASE
+  })
 }

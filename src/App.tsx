@@ -3,6 +3,7 @@ import Dash from "../components/Dash"
 import "./App.css";
 import { initDB } from "@/lib/db";
 import { info } from "@tauri-apps/plugin-log";
+import { initFS } from "@/lib/fs";
 
 function App() {
 const [dbReady, setDbReady] = useState(false)
@@ -10,6 +11,7 @@ const [dbReady, setDbReady] = useState(false)
   (async () => {
     try {
       await initDB()
+      await initFS()
       await info("check the logs")
       setDbReady(true)
     } catch (e) {
@@ -23,7 +25,7 @@ const [dbReady, setDbReady] = useState(false)
   return (
     <main className="flex ">
       <div>
-        
+
         {/* <Sidebar /> */}
       </div>
       <div className="">

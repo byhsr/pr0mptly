@@ -15,6 +15,7 @@ import {
 import { Tab, TabType } from "./Tabbar"
 import { log } from "@/lib/utils"
 import { CollectionTree, CollectionNode, PromptRow } from "@/services/service.collections"
+import { create } from "@tauri-apps/plugin-fs"
 // import type { CollectionTree, CollectionNode, PromptRow } from "@/db/queries" // adjust to your path
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -63,10 +64,8 @@ function InlineInput({ depth = 0, onConfirm, onCancel }: InlineInputProps) {
         ref={ref}
         placeholder="Name..."
         onKeyDown={(e) => {
-          console.log("key pressed", e.key)  // ← see if this fires
-          if (e.key === "Enter") {
+          if (e.key === "Enter" && !e.repeat) {
             const val = ref.current?.value.trim()
-            console.log("Enter pressed, val:", val)
             if (val) onConfirm(val)
             else onCancel()
           }
@@ -398,27 +397,28 @@ export function Sidebar({
 
     setPendingCreate({ type, parentCollectionId })
   }
-
+  let creatingRef = { current: false }
   async function confirmCreate(name: string) {
 
-  log.info("start confirm create key pressed", {name, pendingCreate})
+    if (creatingRef.current) return
+     creatingRef.current = true
+    try {
     if (!pendingCreate) return
     const { type, parentCollectionId } = pendingCreate
     setPendingCreate(null)
     
-  log.info("mid", {name, pendingCreate})
- 
-    try {
       if (type === "prompt") {
-        log.info("callimng create prompt")
         await onCreatePrompt(name, parentCollectionId)
       } else {
         await onCreateCollection(name, parentCollectionId)
       }
-      log.info("Creating prompt", { name,parentCollectionId })
-      await onRefreshTree()
+      log.info("about to refresh tree")
+      // await onRefreshTree()
+      log.info("tree refreshed")
     } catch (err) {
       log.info("creation failed", err)
+    } finally{
+      creatingRef.current = false
     }
   }
 

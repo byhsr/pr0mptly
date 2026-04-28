@@ -7,6 +7,7 @@ import {
   readDir,
   BaseDirectory
 } from "@tauri-apps/plugin-fs"
+import { join } from "@tauri-apps/api/path"
 
 const BASE = BaseDirectory.AppData
 
@@ -17,22 +18,26 @@ export async function createFolder(folderName: string) {
     recursive: true
   })
 }
+export async function initFS() {
+  await createFolder("entries")
+}
 
 // Create file
 export async function createFile(folderName: string, fileName: string, content = "") {
-  await writeTextFile(
-    `${folderName}/${fileName}`,
-    content,
-    { baseDir: BASE }
-  )
+  const path = await join(folderName, fileName)
+
+  await writeTextFile(path, content, {
+    baseDir: BASE
+  })
 }
 
 // Read file
 export async function readFile(folderName: string, fileName: string) {
-  return await readTextFile(
-    `${folderName}/${fileName}`,
-    { baseDir: BASE }
-  )
+  const path = await join(folderName, fileName)
+
+  return await readTextFile(path, {
+    baseDir: BASE
+  })
 }
 
 // Delete folder

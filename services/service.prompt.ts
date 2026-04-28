@@ -74,66 +74,67 @@ export async function createPrompt({
     const promptId = crypto.randomUUID()
     const versionId = crypto.randomUUID()
     const createdAt = new Date().toISOString()
-
     const folder = `entries/${promptId}`
-    log.info("inside createPrompt")
+    console.log("Creating prompt with ID:", promptId)
     try {
         // FS
-        log.info("before folderExists")
-        try {
-            const fe = await folderExists(folder)
-            log.info("folderExists result", { fe })
-        } catch (err) {
-            log.error("folderExists error", { err: String(err), json: JSON.stringify(err) })
-            throw err
-        }
-        // if (fe) {
-        //     await deleteFolder(folder)
-        // }
+        console.log("START, in createPrompt")
+        await createFolder("entries") // idempotent ensure parent exists
+        console.log("entries ok")
+
+        await deleteFolder(folder).catch(() => { })
+        console.log("delete ok")
 
         await createFolder(folder)
-        log.info("folder created")
-        await createFile(folder, "scratchpad.md", "")
-        log.info("scratchpad created")
-        await createFile(folder, "output.json", "{}")
-        log.info("FS done, starting transaction")
-        // DB
-        await runTransaction(db, async (tx) => {
-            log.info("inside transaction")
-            await tx.execute(
-                `INSERT INTO prompts (id, name, template_id, collection_id, current_version_id, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [promptId, name, template_id, collection_id, versionId, createdAt, createdAt]
-            )
+        console.log("folder ok")
 
-            await tx.execute(
-                `INSERT INTO prompt_versions (
-      id, prompt_id, version_number, label,
-      builder_content,
-      scratchpad_path, output_path, output_type,
-      created_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    versionId,
-                    promptId,
-                    1,
-                    "v1",
-                    "{}",
-                    `${folder}/scratchpad.md`,
-                    `${folder}/output.json`,
-                    "json",
-                    createdAt
-                ]
-            )
-        })
+        await createFile(folder, "scratchpad.md", "")
+        console.log("scratchpad ok")
+
+        await createFile(
+            folder,
+            "output.json",
+            JSON.stringify({ json: {}, text: "", xml: "" })
+        )
+        console.log("output ok")
+
+        // DB
+
+        await db.execute(
+            `INSERT INTO prompts (id, name, template_id, collection_id, current_version_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [promptId, name, template_id, collection_id, versionId, createdAt, createdAt]
+        )
+
+        await db.execute(
+            `INSERT INTO prompt_versions (
+    id, prompt_id, version_number, label,
+    builder_content,
+    scratchpad_path, output_path,
+    created_at
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                versionId,
+                promptId,
+                1,                    // version_number
+                "v1",                 // label
+                "{}",                 // builder_content
+                `${folder}/scratchpad.md`,
+                `${folder}/output.json`,
+                createdAt
+            ]
+        )
+
         return { id: promptId, version_id: versionId }
 
     } catch (err) {
+        console.error("createPrompt failed:", err)
         await deleteFolder(folder).catch(() => { })
         throw err
     }
 }
+
 
 export async function getPrompt(promptId: string): Promise<PromptResult | null> {
     const db = await getDB()

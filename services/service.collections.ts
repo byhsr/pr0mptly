@@ -99,18 +99,9 @@ export async function getCollectionsTree(): Promise<CollectionTree> {
   // optional: root-level prompts (no collection)
   const rootPrompts = promptMap.get(null) || []
 
-  // if you want them as a pseudo-root node:
-  if (rootPrompts.length) {
-    tree.unshift({
-      id: "root",
-      name: "Uncategorized",
-      children: [],
-      prompts: rootPrompts
-    })
-  }
 
  return {
-  tree: build(null),
-  rootPrompts: promptMap.get(null) || []
+  tree,
+  rootPrompts
 }
 }

@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+
       "decorations": false,
       "devtools" : true
       }

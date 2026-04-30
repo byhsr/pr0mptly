@@ -55,12 +55,12 @@ export function TabBar() {
   const { tabs, activeTabId, isDash ,setActiveTab, closeTab, sidebarOpen, toggleSidebar } = useTabsStore()
 
   return (
-    <div className="border w-full items-center flex justify-between">
+    <div   className="border-b min-h-8 w-full items-center flex justify-between">
       <div className="items-center flex flex-1">
                {/* Drag region (ONLY LEFT) */}
       <div
         data-tauri-drag-region
-        className=" items-center shrink-0 h-full select-none"
+        className=" flex items-center shrink-0 h-full select-none"
         style={{ minWidth: 140, paddingLeft: 8, paddingRight: 12, gap: 8 }}
       >
        <button

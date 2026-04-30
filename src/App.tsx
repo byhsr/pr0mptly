@@ -38,6 +38,7 @@ export const AppFlow = () => {
         setDbReady(true)
         const { basePath } = await getAppState()
         if (basePath) { await setupWorkspace(basePath) }
+        console.log("APP initialized with basePath:", basePath)
         setBasePath(basePath)
       } catch (e) {
         console.error("APP init failed", e)

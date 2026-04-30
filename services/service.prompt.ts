@@ -1,7 +1,6 @@
-import { appDataDir, join } from "@tauri-apps/api/path"
-import { createFile, readFile, createFolder, deleteFolder, folderExists, listAll } from "../lib/fs.ts"
-import { DB, getDB, runTransaction } from "../lib/db/index.ts"
-import { log } from "@/lib/utils.ts"
+import { createFile, readFile, createFolder, deleteFolder } from "../lib/fs.ts"
+import { getDB } from "../lib/db/index.ts"
+
 
 type CreatePromptInput = {
     name: string
@@ -281,4 +280,10 @@ export async function updatePromptContent({
     }
 
     return { ok: true }
+}
+
+export async function deletePrompt(promptId: string) {
+    const db = await getDB()
+    await db.execute(`DELETE FROM prompts WHERE id = ?`, [promptId])
+
 }

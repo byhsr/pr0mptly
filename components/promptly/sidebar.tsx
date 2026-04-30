@@ -131,7 +131,7 @@ function PromptItem({ prompt, depth = 0, isActive, isSelected, onSelect, onOpenT
         color: isActive
           ? "var(--color-text, #eee)"
           : "var(--color-muted, #888)",
-        background: isSelected
+        background: (isSelected && contextMenu)
           ? "var(--color-selection, #1e1e1e)"
           : isActive
             ? "var(--color-active, #1a1a1a)"

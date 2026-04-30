@@ -1,38 +1,52 @@
 import { useEffect, useState } from "react";
 import Dash from "../components/Dash"
 import "./App.css";
-import { initDB } from "@/lib/db";
-import { info } from "@tauri-apps/plugin-log";
-import { initFS } from "@/lib/fs";
+import { getAppState, initDB } from "@/lib/db";
+import { initFS, setupWorkspace } from "@/lib/fs";
+import Onboarding from "@/components/Onboard";
+import { TabBar } from "@/components/promptly/Tabbar";
 
 function App() {
-const [dbReady, setDbReady] = useState(false)
- useEffect(() => {
-  (async () => {
-    try {
-      await initDB()
-      await initFS()
-      await info("check the logs")
-      setDbReady(true)
-    } catch (e) {
-      console.error("DB init failed", e)
-      
-    }
-  })()
-}, [])
-
 
   return (
-    <main className="flex ">
-      <div>
-
-        {/* <Sidebar /> */}
-      </div>
-      <div className="">
-        <Dash dbReady={dbReady}/>
-      </div>
+    <main className="w-full ">
+      <nav className="overflow-clip">
+      <TabBar />
+      </nav>
+      <section className="w-full ">
+        <AppFlow />
+      </section>
     </main>
   );
 }
 
 export default App;
+
+
+export const AppFlow = () => {
+
+  const [dbReady, setDbReady] = useState(false)
+  const [basePath, setBasePath] = useState("")
+
+  useEffect(() => {
+    (async () => {
+      try {
+        console.log("Initializing DB...")
+        await initDB()
+        await initFS()
+        await initFS()
+        setDbReady(true)
+        const { basePath } = await getAppState()
+        if (basePath) { await setupWorkspace(basePath) }
+        setBasePath(basePath)
+      } catch (e) {
+        console.error("APP init failed", e)
+      }
+    })()
+  }, [])
+  if (!dbReady) return "wait"
+  if (!basePath) return <Onboarding onDone={() => setBasePath("done")} />
+
+  return (<Dash dbReady={dbReady} />)
+  
+}

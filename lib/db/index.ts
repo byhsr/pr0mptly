@@ -11,6 +11,11 @@ const MIGRATIONS: { id: number; sql: string }[] = [
     sql: `
     -- ── Library ─────────────────────────────────────────
 
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS library_assets (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -135,10 +140,18 @@ async function runMigrations(db: Database) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 export async function initDB() {
   if (db) return db;
-  console.log("before load")
+
   db = await Database.load("sqlite:app.db?mode=rwc");
-  console.log("after load")
+
   await runMigrations(db);
+
+  // seed defaults (idempotent)
+  await db.execute(`
+    INSERT OR IGNORE INTO app_settings (key, value) VALUES
+    ('base_path', ''),
+    ('onboarding_done', 'false');
+  `);
+
   return db;
 }
 
@@ -161,4 +174,29 @@ export async function runTransaction<T>(
     await db.execute("ROLLBACK").catch(() => {})
     throw err
   }
+}
+
+export async function getSetting(key: string) {
+  const db = getDB()
+
+  const rows = await db.select<{ value: string }[]>(
+    `SELECT value FROM app_settings WHERE key = ?`,
+    [key]
+  )
+
+  return rows[0]?.value ?? null
+}
+
+export async function setSetting(key: string, value: string) {
+  const db = getDB()
+
+  await db.execute(
+    `INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)`,
+    [key, value]
+  )
+}
+
+export async function getAppState() {
+  const basePath = await getSetting("base_path")
+  return { basePath }
 }

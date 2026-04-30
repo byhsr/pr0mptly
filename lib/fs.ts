@@ -12,6 +12,24 @@ import { join } from "@tauri-apps/api/path"
 const BASE = BaseDirectory.AppData
 
 // Create folder
+export async function createBaseFolder(fullPath: string) {
+  await mkdir(fullPath, {
+    recursive: true,})
+  }
+
+  const WORKSPACE_DIRS = [
+  "prompts",
+  "library",
+  "templates",
+]
+
+ export async function setupWorkspace(basePath: string) {
+  for (const dir of WORKSPACE_DIRS) {
+    await createBaseFolder(`${basePath}/${dir}`)
+  }
+}
+  
+// this is per file like entries/{promptId}/scratchpad.md
 export async function createFolder(folderName: string) {
   await mkdir(folderName, {
     baseDir: BASE,

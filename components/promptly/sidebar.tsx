@@ -477,7 +477,7 @@ export function Sidebar({
 
   return (
     <div
-      className="flex h-full flex-shrink-0"
+      className="flex h-full w-full "
       style={{ borderRight: "0.5px solid var(--color-border, #222)" }}
     >
       {/* Icon rail left view selector  */}
@@ -538,13 +538,13 @@ export function Sidebar({
           <motion.div
             key={activeSection}
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 180, opacity: 1 }}
+            animate={{ width: "100%", opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="flex flex-col h-full overflow-hidden flex-shrink-0"
+            className="flex flex-col h-full w-full overflow-hidden "
             style={{ background: "var(--color-surface, #0d0d0d)" }}
           >
-            <div className="flex flex-col h-full w-[180px]">
+            <div className="flex flex-col h-full w-full ">
 
               {/* Panel header */}
               <div

@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+
 :root {
   --background: #0e0e0e;
   --foreground: #e8e8e8;

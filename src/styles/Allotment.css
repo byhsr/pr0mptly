@@ -1,0 +1,16 @@
+.sash.sash-vertical {
+  width: 2px !important;
+  cursor: col-resize !important;
+  background-color: transparent !important;
+}
+
+.sash.sash-vertical::before {
+  width: 2px !important;
+  background-color: transparent !important;
+}
+
+.sash.sash-vertical.sash-hover::before,
+.sash.sash-vertical.sash-active::before {
+  width: 2px !important;
+  background-color: hsl(var(--border)) !important;
+}

@@ -29,6 +29,14 @@ export async function createBaseFolder(fullPath: string) {
   }
 }
   
+function isSafePath(path: string, basePath: string) {
+  return path.startsWith(basePath)
+}
+
+//before write and read
+// if (!isSafePath(targetPath, basePath)) {
+//   throw new Error("Unsafe path")
+// }
 // this is per file like entries/{promptId}/scratchpad.md
 export async function createFolder(folderName: string) {
   await mkdir(folderName, {

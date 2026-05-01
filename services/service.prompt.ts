@@ -1,6 +1,7 @@
-import { createFile, readFile, createFolder, deleteFolder } from "../lib/fs.ts"
+import { createFile, readFile, createFolder, deleteFolder, _DIRS } from "../lib/fs/fs.ts"
 import { getDB } from "../lib/db/index.ts"
-
+import { join } from "@tauri-apps/api/path"
+import { getPromptTypeDir, getPrompt, buildFilePath } from "@/lib/fs/fsHelpers.ts"
 
 type CreatePromptInput = {
     name: string
@@ -73,26 +74,29 @@ export async function createPrompt({
     const promptId = crypto.randomUUID()
     const versionId = crypto.randomUUID()
     const createdAt = new Date().toISOString()
-    const folder = `entries/${promptId}`
+    const entriesDir = await getPromptTypeDir("entries")
+    const newPromptfolder = await getPrompt("entries", promptId) // this is basepath/prompts/entries/promptId
+
+
     console.log("Creating prompt with ID:", promptId)
     try {
         // FS
         console.log("START, in createPrompt")
-        await createFolder("entries") // idempotent ensure parent exists
+        await createFolder(entriesDir) // idempotent ensure parent exists
         console.log("entries ok")
 
-        await deleteFolder(folder).catch(() => { })
-        console.log("delete ok")
-
-        await createFolder(folder)
+        await createFolder(newPromptfolder)
         console.log("folder ok")
 
-        await createFile(folder, "scratchpad.md", "")
+        const scratchpadPath = await buildFilePath(newPromptfolder, "scratchpad.md") // this is basepath/prompts/entries/promptId/scratchpad.md
+        const outputPath = await buildFilePath(newPromptfolder, "output.json") 
+        console.log("about to create files")
+
+        await createFile(scratchpadPath, "")
         console.log("scratchpad ok")
 
         await createFile(
-            folder,
-            "output.json",
+            outputPath,
             JSON.stringify({ json: {}, text: "", xml: "" })
         )
         console.log("output ok")
@@ -119,8 +123,8 @@ export async function createPrompt({
                 1,                    // version_number
                 "v1",                 // label
                 "{}",                 // builder_content
-                `${folder}/scratchpad.md`,
-                `${folder}/output.json`,
+                scratchpadPath,
+                outputPath,
                 createdAt
             ]
         )
@@ -129,13 +133,12 @@ export async function createPrompt({
 
     } catch (err) {
         console.error("createPrompt failed:", err)
-        await deleteFolder(folder).catch(() => { })
         throw err
     }
 }
 
 
-export async function getPrompt(promptId: string): Promise<PromptResult | null> {
+export async function readPrompt(promptId: string): Promise<PromptResult | null> {
     const db = await getDB()
 
     // ---- DB ----
@@ -164,7 +167,7 @@ export async function getPrompt(promptId: string): Promise<PromptResult | null> 
     }
 
     // ---- FS ----
-    const folder = `entries/${promptId}`
+    const folder = await getPrompt("entries", promptId)
 
     let scratchpad = ""
     let output = { text: "", json: {}, xml: "" }
@@ -233,7 +236,7 @@ export async function updatePromptContent({
     const oldUpdatedAt = versionRows[0].updated_at
     const newUpdatedAt = new Date().toISOString()
 
-    const folder = `entries/${promptId}`
+    const folder = await getPrompt("entries", promptId)
 
     // ---- DB check FIRST (gatekeeper) ----
     if (builder_content) {
@@ -258,7 +261,8 @@ export async function updatePromptContent({
 
     // scratchpad
     if (typeof scratchpad === "string") {
-        await createFile(folder, "scratchpad.md", scratchpad)
+        const scratchpadPath = await buildFilePath(folder, "scratchpad.md")
+        await createFile(scratchpadPath, scratchpad)
     }
 
     // output (merge-safe)
@@ -276,7 +280,8 @@ export async function updatePromptContent({
             xml: output.xml ?? existing.xml
         }
 
-        await createFile(folder, "output.json", JSON.stringify(merged))
+        const outputPath = await buildFilePath(folder, "output.json")
+        await createFile(outputPath, JSON.stringify(merged))
     }
 
     return { ok: true }

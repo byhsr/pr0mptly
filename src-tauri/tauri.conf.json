@@ -12,6 +12,8 @@
   "app": {
     "windows": [
       {
+        "label": "main",
+        "title": "pr0mptly",
         "decorations": false,
         "devtools": true,
         "resizable": true,

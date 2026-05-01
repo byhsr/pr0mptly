@@ -196,7 +196,7 @@ export async function setSetting(key: string, value: string) {
   )
 }
 
-export async function getAppState() {
+export async function getAppBasePath() {
   const basePath = await getSetting("base_path")
   return { basePath }
 }

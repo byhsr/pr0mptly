@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Tab } from "./promptly/Tabbar"
 import { Sidebar } from "@/components/promptly/sidebar"
 import { Workspace } from "./promptly/Workspaces"
 import { getCollectionsTree, CollectionTree, createCollection } from "@/services/service.collections"
 import { createPrompt } from "@/services/service.prompt"
 import { useTabsStore } from "@/hooks/store/TabStore"
-import { Group, Panel, Separator, useDefaultLayout, } from "react-resizable-panels"
+import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels"
 
 
 
@@ -30,9 +30,19 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
     storage: localStorage
   })
 
+  const sidebarRef = usePanelRef()
+
   const [collectionsTree, setCollectionsTree] = useState<CollectionTree | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+  if (sidebarOpen) {
+    sidebarRef.current?.expand()
+  } else {
+    sidebarRef.current?.collapse()
+  }
+}, [sidebarOpen])
 
   // ── Load tree ──
   const refreshTree = useCallback(async () => {
@@ -111,7 +121,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
           defaultLayout={defaultLayout}
           onLayoutChanged={onLayoutChanged}
           orientation="horizontal">
-          <Panel id="sidebar" className="cursor-resize" minSize="220px" maxSize="500px">
+          <Panel id="sidebar" panelRef={sidebarRef} collapsible collapsedSize="0px" className="cursor-resize" minSize="220px" maxSize="500px">
             <Sidebar
               activeTab={activeTab}
               isOpen={sidebarOpen}

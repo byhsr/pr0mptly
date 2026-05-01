@@ -30,10 +30,20 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   setActiveTab: (id) => set({ activeTabId: id }),
 
   addTab: (tab) =>
-    set((state) => ({
+  set((state) => {
+    const exists = state.tabs.find(t => t.id === tab.id)
+
+    if (exists) {
+      return {
+        activeTabId: tab.id
+      }
+    }
+
+    return {
       tabs: [...state.tabs, tab],
       activeTabId: tab.id,
-    })),
+    }
+  }),
 
   closeTab: (id) =>
     set((state) => {

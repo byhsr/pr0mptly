@@ -15,7 +15,7 @@ import {
 import { Tab, TabType } from "./Tabbar"
 import { log } from "@/lib/utils"
 import { CollectionTree, CollectionNode, PromptRow } from "@/services/service.collections"
-import { create } from "@tauri-apps/plugin-fs"
+
 // import type { CollectionTree, CollectionNode, PromptRow } from "@/db/queries" // adjust to your path
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -336,10 +336,11 @@ function RailButton({ icon: Icon, label, isActive, onClick }: RailButtonProps) {
     <button
       onClick={onClick}
       title={label}
-      className="flex items-center justify-center rounded-lg transition-colors"
+      className={"flex items-center justify-center rounded-lg rounded-b-none transition-colors"}
       style={{
         width: 32,
         height: 32,
+        // border : isActive ? "1px solid var(--color-accent, #444)" : "1px solid transparent",
         color: isActive ? "var(--color-text, #eee)" : "var(--color-muted, #555)",
         background: isActive ? "var(--color-active, #1a1a1a)" : "transparent",
       }}
@@ -377,18 +378,21 @@ export function Sidebar({
   const derivedSection = sectionFromTab[activeTab?.type] ?? null
   const activeSection = manualOverride ? manualSection : (derivedSection ?? manualSection)
   const panelOpen = isOpen && activeSection !== null
+ 
 
   useEffect(() => {
     setManualOverride(false)
   }, [activeTab?.id])
 
   // ── Helpers ──────────────────────────────────────────────────────────────
-
-  function toggleSection(section: SectionId) {
-    setManualSection((prev) => (prev === section ? null : section))
-    setManualOverride(true)
-  }
-
+ 
+ function toggleSection(section: SectionId) {
+  setManualSection((prev) => {
+    const next = prev === section ? null : section
+    return next
+  })
+  setManualOverride(true)
+}
   function toggleExpand(id: string) {
     const next = new Set(expandedCollections)
     next.has(id) ? next.delete(id) : next.add(id)
@@ -477,8 +481,8 @@ export function Sidebar({
 
   return (
     <div
-      className="flex h-full w-full "
-      style={{ borderRight: "0.5px solid var(--color-border, #222)" }}
+      className="flex flex-col h-full w-full "
+      style={{ borderRight: "1.5px solid var(--color-border, #222)" }}
     >
       {/* Icon rail left view selector  */}
       <AnimatePresence initial={false}>
@@ -488,26 +492,19 @@ export function Sidebar({
             animate={{ width: 52, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="flex flex-col items-center py-2 gap-1 overflow-hidden flex-shrink-0"
+            className="flex min-w-full  items-center p-2 gap-2 overflow-hidden flex-shrink-0"
             style={{
               background: "var(--color-surface, #0d0d0d)",
-              borderRight: "0.5px solid var(--color-border, #222)",
+              // borderRight: "0.5px solid var(--color-border, #222)",
             }}
           >
-            <RailButton
+            {/* panel view bar */}
+           <motion.div className="flex gap-2 rounded-lg px-4 items-center pt-2 bg-background w-full">
+              <RailButton
               icon={Home}
               label="Home"
               isActive={activeTab.type === "home"}
               onClick={() => onOpenTab({ id: "home", label: "Home", type: "home" })}
-            />
-
-            <div
-              style={{
-                width: 24,
-                height: 0.5,
-                background: "var(--color-border, #222)",
-                margin: "4px 0",
-              }}
             />
 
             <RailButton
@@ -528,30 +525,31 @@ export function Sidebar({
               isActive={activeSection === "library"}
               onClick={() => toggleSection("library")}
             />
+           </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Section panel */}
-      <AnimatePresence initial={false}>
+      
         {panelOpen && (
-          <motion.div
+          <div
             key={activeSection}
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: "100%", opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="flex flex-col h-full w-full overflow-hidden "
+            className="flex flex-col w-full h-full min-h-0 overflow-y-auto"
             style={{ background: "var(--color-surface, #0d0d0d)" }}
           >
             <div className="flex flex-col h-full w-full ">
 
               {/* Panel header */}
               <div
+             
                 className="flex items-center justify-between px-3 py-2"
                 style={{ borderBottom: "0.5px solid var(--color-border, #222)" }}
               >
-                <span
+                <div
+                 onClick={() => {
+                cancelCreate()
+                setSelectedId(null)}} 
                   style={{
                     fontSize: 10,
                     fontFamily: "'Syne', sans-serif",
@@ -562,7 +560,7 @@ export function Sidebar({
                   }}
                 >
                   {activeSection}
-                </span>
+                </div>
 
                 {/* Only show create buttons for prompts section */}
                 {activeSection === "prompts" && (
@@ -654,9 +652,9 @@ export function Sidebar({
 
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
+ 
     </div>
   )
 }

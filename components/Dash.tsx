@@ -35,6 +35,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
   const [collectionsTree, setCollectionsTree] = useState<CollectionTree | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set())
+  console.log("selectId:", selectedId)
 
   useEffect(() => {
   if (sidebarOpen) {
@@ -42,7 +43,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
   } else {
     sidebarRef.current?.collapse()
   }
-}, [sidebarOpen])
+}, [sidebarOpen, ])
 
   // ── Load tree ──
   const refreshTree = useCallback(async () => {

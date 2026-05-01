@@ -92,6 +92,7 @@ export function TabBar() {
         {/* Tabs */}
         <div className="flex items-center px-2 gap-2 overflow-x-auto flex-1">
           {tabs.map((tab) => {
+            if (tab.type === "home") return
             const isActive = activeTabId === tab.id
 
             return (
@@ -100,7 +101,7 @@ export function TabBar() {
                 onClick={() => setActiveTab(tab.id)}
                 style={{ height: 28 }}
                 className={`flex items-center bg-surface rounded-lg gap-1 px-3 cursor-pointer text-xs font-mono transition-colors
-    ${isActive
+               ${isActive
                     ? " border-b border-primary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                   }`}

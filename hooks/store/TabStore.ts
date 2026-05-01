@@ -7,7 +7,7 @@ type TabsState = {
   activeTabId: string | null
   isDash : boolean
   sidebarOpen: boolean
-  setDash : () => void
+  setDash : () => void // this toggles off the sidebar collapse button if not on dash 
   setTabs: (tabs: Tab[]) => void
   setActiveTab: (id: string) => void
   addTab: (tab: Tab) => void
@@ -21,7 +21,6 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   activeTabId: null,
 
   sidebarOpen: true,
-
   
   isDash : false,
   setDash : () => set({ isDash : true }),

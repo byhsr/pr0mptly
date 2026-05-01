@@ -8,6 +8,7 @@ import { TabBar } from "@/components/promptly/Tabbar";
 
 function App() {
 
+console.log("saved layout on load:", localStorage.getItem("panel-layout"))
   return (
     <main className="w-full ">
       <nav className="overflow-clip">

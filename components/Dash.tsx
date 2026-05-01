@@ -1,24 +1,16 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Tab } from "./promptly/Tabbar"
 import { Sidebar } from "@/components/promptly/sidebar"
 import { Workspace } from "./promptly/Workspaces"
 import { getCollectionsTree, CollectionTree, createCollection } from "@/services/service.collections"
 import { createPrompt } from "@/services/service.prompt"
 import { useTabsStore } from "@/hooks/store/TabStore"
-import { Allotment } from "allotment"
-import { Group, Panel, Separator } from "react-resizable-panels"
-import "allotment/dist/style.css"
-import "../src/styles/Allotment.css"
+import { Group, Panel, Separator, useDefaultLayout, } from "react-resizable-panels"
 
 
-type SplitLayoutProps = {
-  sidebar: React.ReactNode
-  main: React.ReactNode
-  defaultSize?: number // %
-  onResize?: (size: number) => void
-}
+
 
 const HOME_TAB: Tab = { id: "home", label: "Home", type: "home" }
 
@@ -33,9 +25,11 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
     setDash,
   } = useTabsStore()
 
+    const { defaultLayout, onLayoutChanged } = useDefaultLayout({
+    groupId: "main-layout",
+    storage: localStorage
+  })
 
-
-  // ── Local UI state (keep these) ──
   const [collectionsTree, setCollectionsTree] = useState<CollectionTree | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set())
@@ -109,13 +103,15 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
     [refreshTree]
   )
 
+
   return (
     <div className="flex flex-col w-screen h-screen overflow-hidden">
-
-
       <div className="flex w-full h-full overflow-hidden">
-        <Group>
-          <Panel className="cursor-resize" minSize={220} maxSize={500}>
+        <Group
+          defaultLayout={defaultLayout}
+          onLayoutChanged={onLayoutChanged}
+          orientation="horizontal">
+          <Panel id="sidebar" className="cursor-resize" minSize="220px" maxSize="500px">
             <Sidebar
               activeTab={activeTab}
               isOpen={sidebarOpen}
@@ -131,7 +127,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
             />
           </Panel>
           <Separator style={{ cursor: "col-resize" }} />
-          <Panel>
+          <Panel id="workspace">
             <Workspace
               tabs={tabs}
               activeTab={activeTab}

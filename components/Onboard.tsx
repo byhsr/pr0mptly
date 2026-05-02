@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { open } from "@tauri-apps/plugin-dialog"
 import { setSetting } from "@/lib/db"
-import { createBaseFolder, setupWorkspace } from "@/lib/fs/fs"
+import { createBaseFolder, setupWorkspace, writeConfig } from "@/lib/fs/fs"
 
 export default function Onboarding({ onDone }: { onDone: () => void }) {
     const [loading, setLoading] = useState(false)
@@ -20,14 +20,13 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             if (!selected || Array.isArray(selected)) return
 
              console.log("Selected folder:", selected)
-            // save to DB
-            await setSetting("base_path", selected)
              
             // setup folder
             await createBaseFolder(selected)
 
             // mark onboarding done
-            await setSetting("onboarding_done", "true")
+            await writeConfig({ base_path: selected })
+
 
 
             onDone()

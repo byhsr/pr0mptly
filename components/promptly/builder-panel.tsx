@@ -42,22 +42,11 @@ const templateFields: Record<Template, FieldConfig[]> = {
   ],
 }
 
-const mockFieldData: Record<string, string> = {
-  objective: "Write a compelling cold email that gets responses from busy executives.",
-  persona: "You are an expert B2B sales copywriter with 10+ years experience.",
-  context: "The target audience is C-level executives at Fortune 500 companies. They receive 100+ emails per day.",
-  constraints: "- Maximum 150 words\n- No jargon or buzzwords\n- Include a clear CTA",
-  "output-format": "Subject line + email body + P.S. line",
-  avoid: "- Generic openers like 'I hope this email finds you well'\n- Pushy sales language\n- Multiple CTAs",
-  "reasoning-steps": "1. Identify pain point\n2. Build credibility\n3. Present solution\n4. Call to action",
-  "think-aloud": "Walk through your thought process step by step before providing the final email.",
-  examples: "Example 1:\nInput: SaaS company selling project management tool\nOutput: [sample cold email]\n\nExample 2:\nInput: Consulting firm offering strategy services\nOutput: [sample cold email]",
-  custom: "Enter your custom prompt structure here...",
-}
+
 
 export function BuilderPanel() {
   const [template, setTemplate] = useState<Template>("default")
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>(mockFieldData)
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
 
   const fields = templateFields[template]
 

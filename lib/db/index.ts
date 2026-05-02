@@ -1,5 +1,5 @@
 import Database from "@tauri-apps/plugin-sql";
-
+import { join } from "@tauri-apps/api/path"
 
 let db: Database;
 export type DB = typeof db
@@ -16,26 +16,6 @@ CREATE TABLE IF NOT EXISTS app_settings (
   value TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS library_assets (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  type TEXT NOT NULL CHECK(type IN ('persona', 'context', 'file')),
-  content TEXT,
-  file_path TEXT,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS asset_chunks (
-  id TEXT PRIMARY KEY,
-  asset_id TEXT NOT NULL REFERENCES library_assets(id) ON DELETE CASCADE,
-  chunk_index INTEGER NOT NULL,
-  content TEXT NOT NULL,
-  embedding BLOB
-);
-
-CREATE INDEX IF NOT EXISTS idx_asset_chunks_asset_id_index
-ON asset_chunks(asset_id, chunk_index);
 
 -- ── Templates ──────────────────────────────────────
 
@@ -100,7 +80,63 @@ CREATE TABLE IF NOT EXISTS quick_runs (
   raw_input TEXT NOT NULL,
   compiled_output TEXT NOT NULL,
   created_at TEXT NOT NULL
-);`
+);
+
+-- ── library ─────────────────────────────────────
+
+CREATE TABLE namespaces (
+  prefix TEXT PRIMARY KEY,   -- "persona", "project"
+  source TEXT CHECK(source IN ('deterministic','rag')) NOT NULL
+);
+
+ CREATE TABLE IF NOT EXISTS deterministic_assets(
+ 
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  
+);
+
+-- ── Rag sources will go here when needed
+CREATE TABLE scopes (
+  id TEXT PRIMARY KEY,   -- "project1"
+  name TEXT,
+  status TEXT CHECK(status IN ('active','archived')) DEFAULT 'active',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE nodes (
+  id TEXT PRIMARY KEY,
+  scope_id TEXT NOT NULL,
+  parent_id TEXT,              -- NULL = root node
+  name TEXT NOT NULL,
+
+  FOREIGN KEY (scope_id) REFERENCES scopes(id),
+  FOREIGN KEY (parent_id) REFERENCES nodes(id)
+);
+
+
+CREATE TABLE node_versions (
+  id TEXT PRIMARY KEY,
+  node_id TEXT NOT NULL,
+  content TEXT NOT NULL,
+  embedding BLOB,              -- vector
+  is_latest BOOLEAN DEFAULT 1,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (node_id) REFERENCES nodes(id)
+);
+
+CREATE VIRTUAL TABLE fts_index USING fts5(
+  content,
+  node_version_id UNINDEXED,
+  scope_id UNINDEXED
+);
+
+
+`
+
   },
   // migration 2 goes here when needed
 ];
@@ -138,21 +174,16 @@ async function runMigrations(db: Database) {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-export async function initDB() {
-  if (db) return db;
+export async function initDB(basePath: string) {
+  if (db) return db
 
-  db = await Database.load("sqlite:app.db?mode=rwc");
+  const dbPath = await join(basePath, "app.db")
 
-  await runMigrations(db);
+  db = await Database.load(`sqlite:${dbPath}?mode=rwc`)
 
-  // seed defaults (idempotent)
-  await db.execute(`
-    INSERT OR IGNORE INTO app_settings (key, value) VALUES
-    ('base_path', ''),
-    ('onboarding_done', 'false');
-  `);
+  await runMigrations(db)
 
-  return db;
+  return db
 }
 
 export function getDB() {
@@ -165,13 +196,13 @@ export async function runTransaction<T>(
   fn: (db: any) => Promise<T>
 ): Promise<T> {
   await db.execute("BEGIN")
-  
+
   try {
     const result = await fn(db)
     await db.execute("COMMIT")
     return result
   } catch (err) {
-    await db.execute("ROLLBACK").catch(() => {})
+    await db.execute("ROLLBACK").catch(() => { })
     throw err
   }
 }

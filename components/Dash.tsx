@@ -59,7 +59,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
     if (!dbReady) return
     refreshTree()
     setDash()
-  }, [dbReady])
+  }, [dbReady, setDash])
 
   // ── Tabs ──
   const openTab = useCallback((tab: Tab) => {

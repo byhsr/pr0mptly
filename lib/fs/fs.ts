@@ -7,7 +7,7 @@ import {
   readDir,
 
 } from "@tauri-apps/plugin-fs"
- 
+import { appDataDir, join } from "@tauri-apps/api/path" 
 
 import { buildFilePath } from "./fsHelpers"
 
@@ -65,4 +65,33 @@ export async function folderExists(folderName: string) {
 // List everything
 export async function listAll(folder: string) {
   return await readDir(folder)
+
+}
+
+
+export async function readConfig() {
+  try {
+    const dir = await appDataDir()
+    const configPath = await join(dir, "config.json")
+
+    const fileExists = await exists(configPath)
+    if (!fileExists) return null
+
+    const content = await readTextFile(configPath)
+    return JSON.parse(content)
+
+  } catch (err) {
+    console.error("readConfig error:", err)
+    return null
+  }
+}
+
+export async function writeConfig(config : {base_path : string}) {
+  const dir = await appDataDir()
+  const configPath = await join(dir, "config.json")
+
+  // ensure dir exists (usually already does, but safe)
+  await mkdir(dir, { recursive: true })
+
+  await writeTextFile(configPath, JSON.stringify(config, null, 2))
 }

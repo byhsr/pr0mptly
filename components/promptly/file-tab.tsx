@@ -72,18 +72,22 @@ export function FileTab({ tab }: { tab: Tab }) {
         className="w-fit flex-1 flex items-center px-6 "
      
         >
-          {tab.label}
+          <input
+            defaultValue={tab.label}
+            onBlur={() =>{}}
+            className="bg-transparent  min-w-full outline-none text-sm font-medium tracking-wide"
+          />
         </div>
 
-        <div className="flex flex-2 items-center justify-end gap-4 border-b border-border  px-4 py-2">
+        <div className="flex flex-2 items-center justify-end gap-4   px-4 pt-2">
           {/* Tab Switcher */}
           <div className="flex items-center gap-1">
             {(["builder", "scratchpad", "prompt"] as SubTab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveSubTab(tab)}
-                className={`rounded-lg px-4 py-2 text-sm font-medium capitalize transition-colors ${activeSubTab === tab
-                  ? "bg-background text-foreground"
+                className={`rounded-lg rounded-b-none px-4 py-2 text-sm font-medium capitalize transition-colors ${activeSubTab === tab
+                  ? "bg-background border-background border-b-2 text-foreground"
                   : "text-main hover:text-foreground hover:bg-background"
                   }`}
               >

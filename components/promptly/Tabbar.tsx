@@ -53,9 +53,9 @@ function TabTypeDot({ type }: { type: TabType }) {
 
 export function TabBar() {
   const { tabs, activeTabId, isDash, setActiveTab, closeTab, sidebarOpen, toggleSidebar } = useTabsStore()
-
+   console.log("isDash:", isDash, "sidebarOpen:", sidebarOpen)
   return (
-    <div className="border-b min-h-8 w-full items-center flex justify-between">
+    <div className="border-b min-h-8 p-2 w-full items-center flex justify-between">
       <div className="items-center flex flex-1">
         {/* Drag region (ONLY LEFT) */}
         <div

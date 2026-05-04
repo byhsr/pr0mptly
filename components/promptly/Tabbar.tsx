@@ -1,14 +1,11 @@
 import { X, PanelLeftClose, PanelLeft, Home, FileText, Layout } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useTabsStore } from "@/hooks/store/TabStore";
-import { div } from "motion/react-client";
-// Tab type — each open document knows what kind it is
-export type TabType = "home" | "prompt" | "template" | "library";
-
+import { useTabViewStore } from "@/hooks/store/TabStore";
+import { ViewType } from "@/lib/types/DashTypes";
 export interface Tab {
   id: string;
   label: string;
-  type: TabType;
+  type: ViewType;
   isDirty?: boolean; // unsaved changes indicator
 }
 
@@ -24,9 +21,9 @@ interface TabBarProps {
 
 
 const appWindow = getCurrentWindow()
-// Tiny dot to indicate tab type — keeps it minimal, no text overload
-function TabTypeDot({ type }: { type: TabType }) {
-  const colors: Record<TabType, string> = {
+// Tiny dot to indicate tab type 
+function TabTypeDot({ type }: { type: ViewType }) {
+  const colors: Record<ViewType, string> = {
     home: "transparent",
     prompt: "#c8f135",
     template: "#6ee7f7",
@@ -52,14 +49,12 @@ function TabTypeDot({ type }: { type: TabType }) {
 
 
 export function TabBar() {
-  const { tabs, activeTabId, isDash, setActiveTab, closeTab, sidebarOpen, toggleSidebar } = useTabsStore()
-   console.log("isDash:", isDash, "sidebarOpen:", sidebarOpen)
+  const { tabs, activeTabId, isDash, setActiveTab, closeTab, sidebarOpen, toggleSidebar , setActiveView} = useTabViewStore()
   return (
-    <div className="border-b min-h-8 p-2 w-full items-center flex justify-between">
-      <div className="items-center flex flex-1">
+    <div  data-tauri-drag-region className="border-b min-h-8 p-2 w-full items-center flex justify-between">
+      <div className="items-center flex ">
         {/* Drag region (ONLY LEFT) */}
-        <div
-          data-tauri-drag-region
+        <div   
           className=" flex items-center shrink-0 h-full select-none"
           style={{ minWidth: 140, paddingLeft: 8, paddingRight: 12, gap: 8 }}
         >
@@ -90,7 +85,7 @@ export function TabBar() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center px-2 gap-2 overflow-x-auto flex-1">
+        <div className="flex w-fit items-center px-2 gap-2 overflow-x-auto ">
           {tabs.map((tab) => {
             if (tab.type === "home") return
             const isActive = activeTabId === tab.id
@@ -98,7 +93,10 @@ export function TabBar() {
             return (
               <div
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id)
+                  setActiveView(tab.type)
+                }}
                 style={{ height: 28 }}
                 className={`flex items-center bg-surface rounded-lg gap-1 px-3 cursor-pointer text-xs font-mono transition-colors
                ${isActive
@@ -106,8 +104,8 @@ export function TabBar() {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                   }`}
               >
-                <span><TabTypeDot type={tab.type} /></span>
-                <span className="truncate max-w-[120px]">{tab.label}</span>
+                <span>{ isActive &&<TabTypeDot type={tab.type} />}</span>
+                <span className="truncate ">{tab.label}</span>
 
                 <button
                   onClick={(e) => { e.stopPropagation(); closeTab(tab.id) }}
@@ -125,11 +123,13 @@ export function TabBar() {
         </div>
       </div>
 
+      <div className="flex-1 h-full ">
 
+      </div>
 
       {/* Window controls */}
       <div
-        className="flex flex-1  justify-end items-center w-full shrink-0"
+        className="flex justify-end items-center w-fitl shrink-0"
         style={{ paddingRight: 6, gap: 2 }}
       >
         <button

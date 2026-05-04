@@ -86,12 +86,21 @@ export async function readConfig() {
   }
 }
 
-export async function writeConfig(config : {base_path : string}) {
+export async function writeConfig(update: { [key: string]: any }) {
   const dir = await appDataDir()
   const configPath = await join(dir, "config.json")
 
-  // ensure dir exists (usually already does, but safe)
   await mkdir(dir, { recursive: true })
 
-  await writeTextFile(configPath, JSON.stringify(config, null, 2))
+  const existing = (await readConfig()) || {}
+
+  const newConfig = {
+    ...existing,
+    ...update,
+  }
+
+  await writeTextFile(
+    configPath,
+    JSON.stringify(newConfig, null, 2)
+  )
 }

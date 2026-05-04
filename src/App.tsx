@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Dash from "../components/Dash"
 import "./App.css";
-import { getAppBasePath, initDB } from "@/lib/db";
+import {  initDB } from "@/lib/db";
 import { readConfig, setupWorkspace } from "@/lib/fs/fs";
 import { initBasePath } from "@/lib/fs/fsHelpers";
 import Onboarding from "@/components/Onboard";

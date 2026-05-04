@@ -27,4 +27,8 @@ tauri-plugin-log = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-sql = { version = "2.4.0", features = ["sqlite"] }
+fastembed = "5"
+rusqlite = { version = "0.31", features = ["bundled"] }
+sqlite-vec = "0.1.9"
+zerocopy = { version = "0.7", features = ["derive"] }
 

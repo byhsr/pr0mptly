@@ -1,9 +1,11 @@
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
+
+mod commands;
+use fastembed::{TextEmbedding};
+use std::sync::Mutex;
+
+pub struct EmbeddingState(pub Mutex<Option<TextEmbedding>>);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -19,8 +21,11 @@ pub fn run() {
       tauri_plugin_log::TargetKind::Stdout,
     ))
     .build()
-)
-    .invoke_handler(tauri::generate_handler![greet])
+).manage(EmbeddingState(Mutex::new(None))) 
+    .invoke_handler(tauri::generate_handler!
+        [commands::embeddings::setup_embeddings, 
+        commands::embeddings::generate_embeddings,
+         commands::embeddings::search_similar, ])
     .run(tauri::generate_context!())
     .expect("error while running pr0mptly");
 }

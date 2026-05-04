@@ -1,6 +1,7 @@
 // stores/useTabsStore.ts
 import { create } from "zustand"
 import { Tab } from "@/components/promptly/Tabbar"
+import { ViewType } from "@/lib/types/DashTypes"
 
 type TabsState = {
   tabs: Tab[]
@@ -8,23 +9,24 @@ type TabsState = {
   isDash : boolean
   sidebarOpen: boolean
   setDash : () => void // this toggles off the sidebar collapse button if not on dash 
+  setActiveView : (view : ViewType) => void
   setTabs: (tabs: Tab[]) => void
   setActiveTab: (id: string) => void
   addTab: (tab: Tab) => void
   closeTab: (id: string) => void
-
+  activeView : ViewType
   toggleSidebar: () => void
 }
 
-export const useTabsStore = create<TabsState>((set, get) => ({
+export const useTabViewStore = create<TabsState>((set, get) => ({
   tabs: [],
   activeTabId: null,
-
+  activeView : "home",
   sidebarOpen: true,
   
   isDash : false,
   setDash : () => set({ isDash : true }),
-
+  setActiveView : (view : ViewType) => set({ activeView : view }),
   setTabs: (tabs) => set({ tabs }),
   setActiveTab: (id) => set({ activeTabId: id }),
 

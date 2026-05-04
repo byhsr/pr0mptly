@@ -65,8 +65,8 @@ export function FileTab({ tab }: { tab: Tab }) {
   const panelsToShow = getPanelsToShow()
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <div className="flex justify-between w-f bg-surface">
+    <div className="flex relative h-full w-full flex-col">
+      <div className="w-full  flex sticky top-0 justify-between w-f bg-surface">
         {/* tab Title */}
         <div
         className="w-fit flex-1 flex items-center px-6 "

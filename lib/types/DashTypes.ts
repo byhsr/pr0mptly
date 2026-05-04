@@ -1,0 +1,1 @@
+export type ViewType = "home" | "prompt" | "template" | "library"

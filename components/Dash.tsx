@@ -6,13 +6,9 @@ import { Sidebar } from "@/components/promptly/sidebar"
 import { Workspace } from "./promptly/Workspaces"
 import { getCollectionsTree, CollectionTree, createCollection } from "@/services/service.collections"
 import { createPrompt } from "@/services/service.prompt"
-import { useTabsStore } from "@/hooks/store/TabStore"
+import { useTabViewStore } from "@/hooks/store/TabStore"
 import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels"
 
-
-
-
-const HOME_TAB: Tab = { id: "home", label: "Home", type: "home" }
 
 export default function Promptly({ dbReady }: { dbReady: boolean }) {
   const {
@@ -23,7 +19,9 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
     closeTab,
     sidebarOpen,
     setDash,
-  } = useTabsStore()
+    activeView,
+    setActiveView
+  } = useTabViewStore()
 
     const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     groupId: "main-layout",
@@ -35,7 +33,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
   const [collectionsTree, setCollectionsTree] = useState<CollectionTree | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [expandedCollections, setExpandedCollections] = useState<Set<string>>(new Set())
-  console.log("selectId:", selectedId)
+
 
   useEffect(() => {
   if (sidebarOpen) {
@@ -67,15 +65,14 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
   }, [addTab])
 
   const markDirty = useCallback((id: string, dirty: boolean) => {
-    useTabsStore.setState((state) => ({
+    useTabViewStore.setState((state) => ({
       tabs: state.tabs.map((t) =>
         t.id === id ? { ...t, isDirty: dirty } : t
       ),
     }))
   }, [])
 
-  const activeTab =
-    tabs.find((t) => t.id === activeTabId) ?? HOME_TAB
+  const activeTab = tabs.find((t) => t.id === activeTabId) 
 
   // ── Create handlers ──
   const handleCreatePrompt = useCallback(
@@ -126,6 +123,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
             <Sidebar
               activeTab={activeTab}
               isOpen={sidebarOpen}
+              activeView={activeView}
               collectionsTree={collectionsTree}
               selectedId={selectedId}
               setSelectedId={setSelectedId}
@@ -135,6 +133,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
               onCreatePrompt={handleCreatePrompt}
               onCreateCollection={handleCreateCollection}
               onRefreshTree={refreshTree}
+              setActiveView={setActiveView}
             />
           </Panel>
           <Separator style={{ cursor: "col-resize" }} />
@@ -142,6 +141,7 @@ export default function Promptly({ dbReady }: { dbReady: boolean }) {
             <Workspace
               tabs={tabs}
               activeTab={activeTab}
+              activeView={activeView}
               onTabSelect={setActiveTab}
               onTabClose={closeTab}
               onMarkDirty={markDirty}

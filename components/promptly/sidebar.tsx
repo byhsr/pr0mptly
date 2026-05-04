@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Home,
@@ -12,28 +12,27 @@ import {
   FolderOpen,
   File,
 } from "lucide-react"
-import { Tab, TabType } from "./Tabbar"
-import { log } from "@/lib/utils"
-import { CollectionTree, CollectionNode, PromptRow } from "@/services/service.collections"
+import { Tab } from "./Tabbar"
 
-// import type { CollectionTree, CollectionNode, PromptRow } from "@/db/queries" // adjust to your path
+import { CollectionTree, CollectionNode } from "@/services/service.collections"
+import {InlineInput} from "@/components/Sidebar/SidebarElements"
+import { CollectionItem } from "@/components/Sidebar/SidebarElements"
+import { PromptFile } from "../Prompt/PromptElements"
+import { ViewType } from "@/lib/types/DashTypes"
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type SectionId = "prompts" | "templates" | "library"
-
-const sectionFromTab: Record<TabType, SectionId | null> = {
-  home: null,
-  prompt: "prompts",
-  template: "templates",
-  library: "library",
-}
+// const sectionFromTab: Record<ViewType, ViewType | null> = {
+//   home: null,
+//   prompt: "prompt",
+//   template: "template",
+//   library: "library",
+// }
 
 interface SidebarProps {
   isOpen: boolean
-  activeTab: Tab
+  activeTab: Tab | undefined
   collectionsTree: CollectionTree | null
   selectedId: string | null
+  activeView : ViewType
   setSelectedId: (id: string | null) => void
   expandedCollections: Set<string>
   setExpandedCollections: (s: Set<string>) => void
@@ -41,288 +40,8 @@ interface SidebarProps {
   onCreatePrompt: (name: string, collectionId: string | null) => Promise<void>
   onCreateCollection: (name: string, parentId: string | null) => Promise<void>
   onRefreshTree: () => Promise<void>
+  setActiveView : (view : ViewType ) => void
 }
-
-// ─── Inline Input ─────────────────────────────────────────────────────────────
-
-interface InlineInputProps {
-  depth?: number
-  onConfirm: (name: string) => void
-  onCancel: () => void
-}
-
-function InlineInput({ depth = 0, onConfirm, onCancel }: InlineInputProps) {
-  const ref = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    ref.current?.focus()
-  }, [])
-
-  return (
-    <div style={{ paddingLeft: 8 + depth * 12 }}>
-      <input
-        ref={ref}
-        placeholder="Name..."
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.repeat) {
-            const val = ref.current?.value.trim()
-            if (val) onConfirm(val)
-            else onCancel()
-          }
-          if (e.key === "Escape") onCancel()
-        }}
-        style={{
-          background: "transparent",
-          border: "none",
-          outline: "1px solid var(--color-accent, #444)",
-          borderRadius: 4,
-          color: "var(--color-text, #eee)",
-          fontSize: 12,
-          fontFamily: "inherit",
-          padding: "1px 4px",
-          width: "100%",
-        }}
-      />
-    </div>
-  )
-}
-
-// ─── Prompt Item ──────────────────────────────────────────────────────────────
-
-interface PromptItemProps {
-  prompt: PromptRow
-  depth?: number
-  isActive: boolean
-  isSelected: boolean
-  onSelect: () => void
-  onOpenTab: (tab: Tab) => void
-}
-
-function PromptItem({ prompt, depth = 0, isActive, isSelected, onSelect, onOpenTab }: PromptItemProps) {
-  const [contextMenu, setContextMenu] = useState<{
-    x: number
-    y: number
-    prompt: any
-  } | null>(null)
-
-
-  return (
-    <div
-      onContextMenu={(e) => {
-        e.preventDefault()
-        onSelect()
-        setContextMenu({
-          x: e.clientX,
-          y: e.clientY,
-          prompt
-        })
-      }}
-      onClick={() => {
-        onSelect()
-        onOpenTab({ id: prompt.id, label: prompt.name, type: "prompt" })
-      }}
-      className="flex items-center gap-1.5 rounded cursor-pointer select-none"
-      style={{
-        paddingLeft: 8 + depth * 12,
-        paddingTop: 3,
-        paddingBottom: 3,
-        paddingRight: 6,
-        fontSize: 12,
-        color: isActive
-          ? "var(--color-text, #eee)"
-          : "var(--color-muted, #888)",
-        background: (isSelected && contextMenu)
-          ? "var(--color-selection, #1e1e1e)"
-          : isActive
-            ? "var(--color-active, #1a1a1a)"
-            : "transparent",
-        borderRadius: 4,
-        transition: "background 0.1s",
-      }}
-    >
-      {contextMenu && (
-        <div
-          style={{
-            position: "fixed",
-            top: contextMenu.y,
-            left: contextMenu.x
-          }}
-          className="bg-zinc-900 border rounded p-1"
-          onMouseLeave={() => setContextMenu(null)}
-        >
-          <div
-            className="px-2 py-1 hover:bg-zinc-800 cursor-pointer"
-            onClick={() => {
-              // handleRename(contextMenu.prompt)
-              setContextMenu(null)
-            }}
-          >
-            Rename
-          </div>
-
-          <div
-            className="px-2 py-1 hover:bg-red-800 cursor-pointer text-red-400"
-            onClick={() => {
-              // handleDelete(contextMenu.prompt.id)
-              setContextMenu(null)
-            }}
-          >
-            Delete
-          </div>
-        </div>
-      )}
-      <File size={11} style={{ flexShrink: 0, opacity: 0.6 }} />
-      <span
-        style={{
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-          fontWeight: isActive ? 500 : 400,
-        }}
-      >
-        {prompt.name}
-      </span>
-    </div>
-  )
-}
-
-// ─── Collection Node ──────────────────────────────────────────────────────────
-
-interface CollectionItemProps {
-  node: CollectionNode
-  depth?: number
-  activeTabId: string
-  selectedId: string | null
-  expandedCollections: Set<string>
-  onToggleExpand: (id: string) => void
-  onSelect: (id: string) => void
-  onOpenTab: (tab: Tab) => void
-  // inline creation state passed down
-  pendingCreate: PendingCreate | null
-  onInlineConfirm: (name: string) => void
-  onInlineCancel: () => void
-}
-
-function CollectionItem({
-  node,
-  depth = 0,
-  activeTabId,
-  selectedId,
-  expandedCollections,
-  onToggleExpand,
-  onSelect,
-  onOpenTab,
-  pendingCreate,
-  onInlineConfirm,
-  onInlineCancel,
-}: CollectionItemProps) {
-  const isExpanded = expandedCollections.has(node.id)
-  const isSelected = selectedId === node.id
-
-  return (
-    <div>
-      {/* Collection row */}
-      <div
-        onClick={() => {
-          onSelect(node.id)
-          onToggleExpand(node.id)
-        }}
-        className="flex items-center gap-1.5 rounded cursor-pointer select-none"
-        style={{
-          paddingLeft: 8 + depth * 12,
-          paddingTop: 3,
-          paddingBottom: 3,
-          paddingRight: 6,
-          fontSize: 12,
-          color: isSelected ? "var(--color-text, #eee)" : "var(--color-muted, #777)",
-          background: isSelected ? "var(--color-selection, #1e1e1e)" : "transparent",
-          borderRadius: 4,
-          transition: "background 0.1s",
-        }}
-      >
-        <ChevronRight
-          size={10}
-          style={{
-            flexShrink: 0,
-            transition: "transform 0.15s",
-            transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-            opacity: 0.5,
-          }}
-        />
-        {isExpanded ? (
-          <FolderOpen size={11} style={{ flexShrink: 0, opacity: 0.7 }} />
-        ) : (
-          <Folder size={11} style={{ flexShrink: 0, opacity: 0.7 }} />
-        )}
-        <span
-          style={{
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            fontWeight: 500,
-          }}
-        >
-          {node.name}
-        </span>
-      </div>
-
-      {/* Children (only when expanded) */}
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.15, ease: "easeInOut" }}
-            style={{ overflow: "hidden" }}
-          >
-            {/* Nested collections */}
-            {node.children.map((child) => (
-              <CollectionItem
-                key={child.id}
-                node={child}
-                depth={depth + 1}
-                activeTabId={activeTabId}
-                selectedId={selectedId}
-                expandedCollections={expandedCollections}
-                onToggleExpand={onToggleExpand}
-                onSelect={onSelect}
-                onOpenTab={onOpenTab}
-                pendingCreate={pendingCreate}
-                onInlineConfirm={onInlineConfirm}
-                onInlineCancel={onInlineCancel}
-              />
-            ))}
-
-            {/* Prompts in this collection */}
-            {node.prompts.map((p) => (
-              <PromptItem
-                key={p.id}
-                prompt={p}
-                depth={depth + 1}
-                isActive={activeTabId === p.id}
-                isSelected={selectedId === p.id}
-                onSelect={() => onSelect(p.id)}
-                onOpenTab={onOpenTab}
-              />
-            ))}
-
-            {/* Inline input inside this collection */}
-            {pendingCreate && pendingCreate.parentCollectionId === node.id && (
-              <InlineInput
-                depth={depth + 1}
-                onConfirm={onInlineConfirm}
-                onCancel={onInlineCancel}
-              />
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-// ─── Rail Button ──────────────────────────────────────────────────────────────
 
 interface RailButtonProps {
   icon: React.ElementType
@@ -330,6 +49,11 @@ interface RailButtonProps {
   isActive: boolean
   onClick: () => void
 }
+
+export type PendingCreate =
+  | { type: "prompt"; parentCollectionId: string | null }
+  | { type: "collection"; parentCollectionId: string | null }
+
 
 function RailButton({ icon: Icon, label, isActive, onClick }: RailButtonProps) {
   return (
@@ -350,14 +74,6 @@ function RailButton({ icon: Icon, label, isActive, onClick }: RailButtonProps) {
   )
 }
 
-// ─── Pending Create State ─────────────────────────────────────────────────────
-
-type PendingCreate =
-  | { type: "prompt"; parentCollectionId: string | null }
-  | { type: "collection"; parentCollectionId: string | null }
-
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
-
 export function Sidebar({
   isOpen,
   activeTab,
@@ -370,28 +86,21 @@ export function Sidebar({
   onCreatePrompt,
   onCreateCollection,
   onRefreshTree,
+  setActiveView,
+  activeView
 }: SidebarProps) {
-  const [manualSection, setManualSection] = useState<SectionId | null>("prompts")
-  const [manualOverride, setManualOverride] = useState(false)
-  const [pendingCreate, setPendingCreate] = useState<PendingCreate | null>(null)
+  
+const [pendingCreate, setPendingCreate] = useState<PendingCreate | null>(null)
 
-  const derivedSection = sectionFromTab[activeTab?.type] ?? null
-  const activeSection = manualOverride ? manualSection : (derivedSection ?? manualSection)
-  const panelOpen = isOpen && activeSection !== null
- 
+// const activeSection = activeView === "home" ? null : activeView
 
-  useEffect(() => {
-    setManualOverride(false)
-  }, [activeTab?.id])
+const panelOpen = isOpen && activeView !== null
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
- 
- function toggleSection(section: SectionId) {
-  setManualSection((prev) => {
-    const next = prev === section ? null : section
-    return next
-  })
-  setManualOverride(true)
+
+// this toggles Section in sidebar 
+ function toggleSection(section: ViewType) {
+  const newSection = activeView === section ? activeView : section
+  setActiveView(newSection)
 }
   function toggleExpand(id: string) {
     const next = new Set(expandedCollections)
@@ -449,6 +158,7 @@ export function Sidebar({
     setPendingCreate({ type, parentCollectionId })
   }
   let creatingRef = { current: false }
+
   async function confirmCreate(name: string) {
 
     if (creatingRef.current) return
@@ -463,11 +173,8 @@ export function Sidebar({
       } else {
         await onCreateCollection(name, parentCollectionId)
       }
-      log.info("about to refresh tree")
-      // await onRefreshTree()
-      log.info("tree refreshed")
     } catch (err) {
-      log.info("creation failed", err)
+
     } finally {
       creatingRef.current = false
     }
@@ -492,7 +199,7 @@ export function Sidebar({
             animate={{ width: 52, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="flex min-w-full  items-center p-2 gap-2 overflow-hidden flex-shrink-0"
+            className="flex min-w-full  items-center p-2 gap-2 overflow-hidden "
             style={{
               background: "var(--color-surface, #0d0d0d)",
               // borderRight: "0.5px solid var(--color-border, #222)",
@@ -503,26 +210,26 @@ export function Sidebar({
               <RailButton
               icon={Home}
               label="Home"
-              isActive={activeTab.type === "home"}
-              onClick={() => onOpenTab({ id: "home", label: "Home", type: "home" })}
+              isActive={activeView  === "home"}
+              onClick={() => toggleSection("home")}
             />
 
             <RailButton
               icon={FileText}
               label="Prompts"
-              isActive={activeSection === "prompts"}
-              onClick={() => toggleSection("prompts")}
+              isActive={activeView === "prompt"}
+              onClick={() => toggleSection("prompt")}
             />
             <RailButton
               icon={Layout}
               label="Templates"
-              isActive={activeSection === "templates"}
-              onClick={() => toggleSection("templates")}
+              isActive={activeView === "template"}
+              onClick={() => toggleSection("template")}
             />
             <RailButton
               icon={BookOpen}
               label="Library"
-              isActive={activeSection === "library"}
+              isActive={activeView === "library"}
               onClick={() => toggleSection("library")}
             />
            </motion.div>
@@ -534,7 +241,7 @@ export function Sidebar({
       
         {panelOpen && (
           <div
-            key={activeSection}
+            key={activeView}
             className="flex flex-col w-full h-full min-h-0 overflow-y-auto"
             style={{ background: "var(--color-surface, #0d0d0d)" }}
           >
@@ -559,11 +266,11 @@ export function Sidebar({
                     color: "var(--color-muted, #666)",
                   }}
                 >
-                  {activeSection}
+                  {activeView}
                 </div>
 
                 {/* Only show create buttons for prompts section */}
-                {activeSection === "prompts" && (
+                {activeView === "prompt" && (
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => startCreate("collection")}
@@ -588,15 +295,15 @@ export function Sidebar({
               {/* Panel body */}
               <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-0.5">
 
-                {activeSection === "prompts" && collectionsTree && (
+                {activeView === "prompt" && collectionsTree && (
                   <>
                     {/* Root prompts */}
                     {collectionsTree.rootPrompts.map((p) => (
-                      <PromptItem
+                      <PromptFile
                         key={p.id}
                         prompt={p}
                         depth={0}
-                        isActive={activeTab.id === p.id}
+                        isActive={activeTab ? activeTab.id === p.id : false}
                         isSelected={selectedId === p.id}
                         onSelect={() => setSelectedId(p.id)}
                         onOpenTab={onOpenTab}
@@ -618,7 +325,7 @@ export function Sidebar({
                         key={node.id}
                         node={node}
                         depth={0}
-                        activeTabId={activeTab.id}
+                        activeTabId={activeTab ? activeTab.id : null}
                         selectedId={selectedId}
                         expandedCollections={expandedCollections}
                         onToggleExpand={toggleExpand}
@@ -632,19 +339,19 @@ export function Sidebar({
                   </>
                 )}
 
-                {activeSection === "prompts" && !collectionsTree && (
+                {activeView === "prompt" && !collectionsTree && (
                   <span style={{ fontSize: 11, color: "var(--color-muted, #555)", padding: "4px 8px" }}>
                     Loading...
                   </span>
                 )}
 
                 {/* Templates + Library — wire up when ready */}
-                {activeSection === "templates" && (
+                {activeView === "template" && (
                   <span style={{ fontSize: 11, color: "var(--color-muted, #555)", padding: "4px 8px" }}>
                     Templates coming soon
                   </span>
                 )}
-                {activeSection === "library" && (
+                {activeView === "library" && (
                   <span style={{ fontSize: 11, color: "var(--color-muted, #555)", padding: "4px 8px" }}>
                     Library coming soon
                   </span>

@@ -1,0 +1,149 @@
+import { useState } from "react";
+
+type Stage = "idle" | "downloading" | "ready";
+
+export default function ContextSetupGate({ onReady }: { onReady?: () => void }) {
+  const [stage, setStage] = useState<Stage>("idle");
+  const [progress, setProgress] = useState(0);
+  const [statusLabel, setStatusLabel] = useState("");
+
+  const startSetup = async () => {
+    setStage("downloading");
+
+    const stages = [
+      { target: 30, label: "downloading NomicEmbedTextV1.5" },
+      { target: 65, label: "loading model into memory" },
+      { target: 90, label: "warming up embeddings" },
+      { target: 100, label: "ready" },
+    ];
+
+    let current = 0;
+    let stageIdx = 0;
+
+    // In real app: invoke("setup_embeddings", { modelPath }) and listen to model-progress event
+    const tick = setInterval(() => {
+      if (stageIdx >= stages.length) return clearInterval(tick);
+      const { target, label } = stages[stageIdx];
+      setStatusLabel(label);
+      current = Math.min(current + Math.random() * 4 + 1, target);
+      setProgress(current);
+      if (current >= target) {
+        stageIdx++;
+        if (stageIdx >= stages.length) {
+          clearInterval(tick);
+          setTimeout(() => { setStage("ready"); onReady?.(); }, 400);
+        }
+      }
+    }, 120);
+  };
+
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      justifyContent: "center", minHeight: 400, padding: "3rem 2rem",
+      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+    }}>
+      {/* Icon */}
+      <div style={{
+        width: 56, height: 56, borderRadius: 14,
+        border: stage === "ready" ? "1.5px solid rgba(200,255,0,0.3)" : "1.5px solid #2a2a2a",
+        background: "#1e1e1e", display: "flex", alignItems: "center",
+        justifyContent: "center", marginBottom: 24, position: "relative",
+      }}>
+        {stage !== "ready" && (
+          <div style={{
+            position: "absolute", inset: -4, borderRadius: 18,
+            border: "1px solid #c8ff00", opacity: 0,
+            animation: "pulse 2.4s ease-out infinite",
+          }} />
+        )}
+        <svg width={26} height={26} viewBox="0 0 24 24" fill="none"
+          stroke="#c8ff00" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+          {stage === "ready"
+            ? <path d="M20 6L9 17l-5-5" />
+            : <><path d="M12 2a7 7 0 0 1 7 7c0 4-3.5 7-7 9-3.5-2-7-5-7-9a7 7 0 0 1 7-7z" /><circle cx="12" cy="9" r="2.5" /></>
+          }
+        </svg>
+      </div>
+
+      {/* Title */}
+      <p style={{ fontSize: 15, fontWeight: 500, color: "#f0f0f0", marginBottom: 8, textAlign: "center" }}>
+        {stage === "idle" && "context needs a brain"}
+        {stage === "downloading" && "initializing model..."}
+        {stage === "ready" && "model ready"}
+      </p>
+
+      {/* Description */}
+      <p style={{ fontSize: 12, color: "#666", textAlign: "center", lineHeight: 1.7, maxWidth: 340, marginBottom: 28 }}>
+        {stage === "idle" && <>
+          The <code style={{ color: "#c8ff00", background: "rgba(200,255,0,0.07)", padding: "1px 5px", borderRadius: 4 }}>Context</code> tab
+          uses a local embedding model to search your documents — no API keys, runs entirely on your machine.
+        </>}
+        {stage === "downloading" && <>
+          Fetching <code style={{ color: "#c8ff00", background: "rgba(200,255,0,0.07)", padding: "1px 5px", borderRadius: 4 }}>NomicEmbedTextV1.5</code> — this only happens once. Future launches are instant.
+        </>}
+        {stage === "ready" && "Your context engine is initialized. Paste your first document to get started."}
+      </p>
+
+      {/* CTA Button */}
+      {stage === "idle" && (
+        <button onClick={startSetup} style={{
+          background: "#c8ff00", color: "#0f0f0f", border: "none", borderRadius: 8,
+          padding: "10px 22px", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+          letterSpacing: "0.02em", cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          initialize model
+        </button>
+      )}
+
+      {stage === "ready" && (
+        <button style={{
+          background: "#c8ff00", color: "#0f0f0f", border: "none", borderRadius: 8,
+          padding: "10px 22px", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+          letterSpacing: "0.02em", cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          add first document
+        </button>
+      )}
+
+      {/* Progress bar */}
+      {stage === "downloading" && (
+        <>
+          <div style={{ width: 280, height: 2, background: "#2a2a2a", borderRadius: 2, overflow: "hidden", marginTop: 20 }}>
+            <div style={{ height: "100%", background: "#c8ff00", width: `${progress}%`, transition: "width 0.3s ease", borderRadius: 2 }} />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#c8ff00", animation: "blink 1s ease-in-out infinite" }} />
+            <span style={{ fontSize: 11, color: "#666" }}>{statusLabel}</span>
+          </div>
+        </>
+      )}
+
+      {/* Footer hint */}
+      {stage === "idle" && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 24 }}>
+          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#2a2a2a" }} />
+          <span style={{ fontSize: 11, color: "#555" }}>~80mb · one-time download · local only</span>
+          <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#2a2a2a" }} />
+        </div>
+      )}
+
+      <style>{`
+        @keyframes pulse {
+          0% { opacity: 0.5; transform: scale(1); }
+          100% { opacity: 0; transform: scale(1.18); }
+        }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.2; }
+        }
+      `}</style>
+    </div>
+  );
+}
